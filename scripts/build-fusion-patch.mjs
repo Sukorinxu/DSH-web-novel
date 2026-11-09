@@ -69,9 +69,12 @@ export function renderPatch() {
         # 与 lib/index.js Config 默认值保持一致（起点标准 2000–4000）。
         # ⚠️ patch 里显式给的值会覆盖 schema default——0.13.1 曾在这里留了旧值
         # 500/12000，导致「字数标准升级」在真机上从未生效。
+        # contextBudgetChars 9000（>默认 6000）：FUSION 下世界书/人物卡/账本/伏笔
+        # 同时在场，6000 会把「全书大纲」和「原著锚段」挤出预算（真机实测）；
+        # 提到 9000 让长篇续写时的对齐材料进得来。
         minChapterChars: 2000
         maxChapterChars: 4000
-        contextBudgetChars: 6000
+        contextBudgetChars: 9000
         scanTopK: 8
         repetitionWindow: 10
         # FUSION：人类文档走 fiction-suite 技能落盘规范
