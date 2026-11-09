@@ -171,7 +171,7 @@ novel_project init → novel_project phase（看九阶段看板，按提示补�
 
 | 工具 | 职责 | 硬约束 |
 | --- | --- | --- |
-| `novel_project` | init / status / **phase（九阶段看板与入场判定）** / set_stage / repair / check（`fullscan:true` 额外跑全书深扫）/ promise / platform / chars | 防重复创建；阶段入场由代码判定；越级记 skipped；repair 索引-磁盘对账；fullscan 扫关系线/弧线停走/hard 质量债未结（零 token） |
+| `novel_project` | init / status / **phase（九阶段看板与入场判定）** / set_stage / repair / check（`fullscan:true` 额外跑全书深扫）/ promise / platform / chars / summaries（批量回填章节摘要） | 防重复创建；阶段入场由代码判定；越级记 skipped；repair 索引-磁盘对账；fullscan 扫关系线/弧线停走/hard 质量债未结（零 token）；summaries 只回填索引摘要、不动正文 |
 | `novel_outline` | 全书大纲 / 第N章细纲 / **批准** | 写章门禁的钥匙 |
 | `novel_character` | 人物卡 + **语言基因卡**（voice：句长/逻辑/口头禅/绝不说/小动作/语域，结构化存储） | 写章单独注入成区块；audit voice:true 核对禁忌词 |
 | `novel_worldbook` | 世界书条目（add/update/list/remove + import/export） | 设定只认这里；update 保 id；缺触发词不再报错——先抽本书已知实体名，抽不到转常驻并给可见警告 |
