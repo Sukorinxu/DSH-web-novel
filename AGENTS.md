@@ -151,3 +151,29 @@ npm test            # node --test test/（纯逻辑单测 + 假 fs 冒烟 + head
 
 `novel.json.sessions` 是**会话归属集**（哪些会话拥有这本书）—— 面板按它过滤项目列表，
 工具层创建时写入、`requireBook` 补录。它不是书籍内容，改它不需要走 `saveBook` 的 updatedAt 语义。
+
+## FUSION 融合改造（本仓库对上游的偏离，改前必读）
+
+本仓库把插件定位成「机械引擎」，创作方法论交给用户的 `fiction-suite` 技能。上游约定仍然有效，
+以下是叠加的不变量：
+
+1. **布局与版本策略单点**：`lib/layout.js` 是唯一开关（`configureLayout` 由 `apply()` 装配期调用）；
+   `pathsFor()` 是**人类文档路径**的唯一来源，`lib/versioning.js` 是章节文件名/版本号的唯一来源。
+   **禁止**在路由/工具里再手拼 `正文/`、`大纲/细纲`、`人物/`、`06-正文` 等字面量——新增路径一律进
+   `pathsFor`。机器状态（novel.json/账本/设定 JSON/.novel）路径与布局无关，也统一走 `pathsFor`。
+2. **两种 profile**：`forge`（上游默认：正文/大纲/人物 + `第N章-标题-vK.md`）与
+   `fiction-suite`（06-正文/04-细纲/03-分卷大纲/05-角色语言指纹 + `第001章 章名.md`）。
+   `versioning: auto` 的解析是 **forge→versions、fiction-suite→git**；git 模式下正文单文件原地覆盖
+   （`writeText(..., 'replace')`，历史交给书目录 git），回执在缺 `.git` 时给可见 warning。
+   **不要**在 git 模式下恢复 vK 副本或备份目录（技能纪律禁止目录复制式备份）。
+3. **agent 预设 = bundle patch 声明**：dsh 0.2+ 只认 `cordis.patch.yml` 里的
+   `@deepseek-ai/dsh-agent-preset` 行（`preset-novel-forge`）；`~/.dsh/.agent-presets/` 旧目录已无人
+   读取，`lib/preset-deploy.js` 仅保留老宿主兼容。`cordis.patch.yml` **由
+   `scripts/build-fusion-patch.mjs` 生成**（源：`lib/preset/novel-forge/agent.cordis.yml` +
+   `preset.yml`），改源后必须重跑生成器；`test/fusion-layout.test.mjs` 有漂移护栏。
+4. **双轨门禁**：写章轨（插件机审/内容门禁/细纲契约，落盘前零 token 拦截）与定稿轨
+   （fiction-suite 的 Python 脚本，预设里由 `tool-pwsh` 执行）**并列汇报、不互相换算**。插件内
+   不要新增调用 Python/子进程的路径（零依赖、可离线、沙箱内可跑是设计约束）。
+5. **测试**：布局/版本/预设漂移看 `test/fusion-layout.test.mjs`；`node_modules/` 被 gitignore，
+   本地缺宿主 SDK 时可用最小垫片（schemastery + dsh-tools）跑直接 `node test/*.test.mjs`，
+   垫片不入库、不代表宿主真校验器。

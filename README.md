@@ -26,6 +26,24 @@ DeepSeek Harness（DSH）的中文长篇写作插件。它不是「提示词合�
 
 [![Star History Chart](https://api.star-history.com/svg?repos=huangziyuan-general/dsh-novel-forge&type=Date)](https://star-history.com/#huangziyuan-general/dsh-novel-forge&Date)
 
+## FUSION 融合版（本仓库改造：引擎 × 用户技能）
+
+本仓库是 `dsh-novel-forge` 的本地改造版，把插件定位成**机械引擎**，把创作方法论交给用户自己的
+`fiction-suite` 技能（选题/赛道/大纲/节奏/去 AI 味/语言指纹/台账/平台口径与**全部阈值**）。
+三个开关与一条纪律：
+
+| 项 | 本发行版 | 说明 |
+| --- | --- | --- |
+| `layout` | `fiction-suite` | 人类文档按技能落盘规范：`06-正文/第001章 章名.md`、`04-细纲/第001章.md`、`03-分卷大纲/全书大纲.md`、`05-角色语言指纹/<角色名>.md`、`02-设定圣经/故事承诺书.md`；**机器状态**（`novel.json`、`账本/`、`设定/*.json`、`.novel/`）两种布局一致、不动。`layout: forge` 回到插件原生目录。 |
+| `versioning` | `auto`（→ `git`） | fiction-suite 布局下同一章正文**单文件原地覆盖**，历史交给书目录 git（每章定稿/每次台账变更单独 commit）；`versions` 保留 `第N章-标题-vK.md` 永不覆盖。回执检测到书目录没有 `.git` 会给可见警告。 |
+| 预设交付 | bundle patch 声明 | dsh 0.2+ 的 agent 预设是 `cordis.patch.yml` 里的 `@deepseek-ai/dsh-agent-preset` 声明行（`preset-novel-forge`）。`~/.dsh/.agent-presets/` 旧目录**已无人读取**，仅老宿主兼容。 |
+| 门禁双轨 | 写章轨 + 定稿轨 | 写章：插件机审/内容门禁/细纲契约（零 token，落盘前拦）；定稿：用 `tool-pwsh` 跑 fiction-suite 的 `novel_audit.py --kind 定稿` 等脚本，**实际 stdout 与退出码原样进交付**；两轨数字并列、不互相换算。 |
+| 方法论路由 | `fiction-suite` 技能 | 插件的 `novel` 技能只写机械流程与路由；阈值只认 `spec-quality-gates.md`、台账只认 `spec-ledger.md`、去 AI 味只认 `spec-de-ai.md`，禁止凭记忆。 |
+
+改造细节（目录映射、存量书迁移、取舍与回滚、验证清单）见 [FUSION.md](./FUSION.md)。
+`layout`/`versioning` 是**进程级**配置：一个工作区同时只用一种布局；切换后旧书索引仍指向旧文件、
+新旧章会分家，**没有自动迁移**（存量书要么继续 `layout: forge`，要么用 `novel_import` 重建）。
+
 ## 界面一览
 
 右侧栏「锻炉」面板实机渲染（以下均为**虚构示例数据**，非真实书目）：
@@ -93,7 +111,7 @@ dsh plugin --profile web add link:/path/to/dsh-novel-forge
 
 **第 2 步 · 重启 DSH web，然后浏览器硬刷新**（客户端 bundle 在进程启动时快照，不重启等于没装）。
 
-**第 3 步 · 验证安装**：右侧栏出现「🔨 锻炉」独立 tab；在会话里让模型「列出小说工具」，应能看到 20 个 `novel_*` 工具。同时 agent 预设「小说锻炉」已自动部署到 `~/.dsh/.agent-presets/novel-forge/`（已存在则跳过，永不覆盖；`DSH_NOVEL_FORGE_REDEPLOY=1` 强制重铺，`DSH_NOVEL_FORGE_SKIP_DEPLOY=1` 关闭）。
+**第 3 步 · 验证安装**：右侧栏出现「🔨 锻炉」独立 tab；在会话里让模型「列出小说工具」，应能看到 23 个 `novel_*` 工具。agent 预设「小说锻炉」由本 bundle 的 `cordis.patch.yml` 声明（Loader 行 `preset-novel-forge`），新开会话时在预设列表选它即可；dsh 0.2+ 不再读取 `~/.dsh/.agent-presets/` 旧目录（插件仍兼容老宿主，`DSH_NOVEL_FORGE_REDEPLOY=1` 强制重铺、`DSH_NOVEL_FORGE_SKIP_DEPLOY=1` 关闭）。
 
 **第 4 步 · 建第一本书**：在会话里直接对模型说，例如：
 
@@ -174,6 +192,11 @@ novel_project init → novel_project phase（看九阶段看板，按提示补�
 
 ## 数据布局（一本书 = 会话工作区里的一个目录）
 
+> 下面是**源码默认 `layout: forge` + `versioning: versions`** 的布局。本 FUSION 发行版的 patch 设
+> `layout: fiction-suite` + `versioning: auto`（→ git）：正文/细纲/人物卡/全书大纲换成
+> `06-正文/`、`04-细纲/`、`05-角色语言指纹/`、`03-分卷大纲/`，正文文件名 `第001章 章名.md`（无 vK，
+> 历史交给 git）；**机器状态（novel.json/账本/设定 JSON/.novel）与下面完全一致**。
+
 ```text
 我的书/
 ├─ novel.json            # 机器状态：九阶段/批准/章节索引/cast/提案索引/熔断计数
@@ -209,7 +232,9 @@ novel_project init → novel_project phase（看九阶段看板，按提示补�
 | contextBudgetChars | 6000 | 写前简报上下文包预算 |
 | scanTopK | 8 | 扫描报告每维最多列出的问题数 |
 | repetitionWindow | 10 | 跨章重复检测的滑动窗口（与前 N 章比对） |
-| skipPresetDeploy | false | 跳过预设部署 |
+| layout | `forge`（源码默认）；本发行版 patch 设 `fiction-suite` | 人类文档目录布局：`forge` = 正文/大纲/人物；`fiction-suite` = 06-正文/04-细纲/03-分卷大纲/05-角色语言指纹（机器状态两布局一致） |
+| versioning | `auto` | `auto`：forge→`versions`、fiction-suite→`git`；`versions`=vK 副本永不覆盖；`git`=正文单文件原地覆盖、历史交给书目录 git |
+| skipPresetDeploy | false（源码默认）；本发行版 patch 设 true | 跳过旧式 `~/.dsh/.agent-presets/` 部署（0.2+ 宿主只认 bundle patch 的 preset 声明行） |
 | engine.channels.\* | 继承当前路由 | 旁路通道（polish/proofread/annotate/expand/draft）按通道覆盖；长文通道（polish/proofread/draft）`timeoutMs` 默认 600000，短任务通道（annotate/expand）默认 512 tok / 60s |
 | engine.channels.\*.maxTokens | 0 | 0＝不传，继承宿主按模型校准的上限（推荐保持默认）；显式设小会被推理模型的思考+整章重写烧穿（报 `OUTPUT_TRUNCATED`） |
 | engine.retries | 2 | 旁路调用的指数退避重试次数 |

@@ -1,64 +1,106 @@
 ---
 name: novel
-description: Use when the user asks to write, create, outline, or continue a novel/小说/网文（开书/新书/下一章/续写/细纲/大纲/世界观/人物卡/伏笔/发书），or when novel_* tools or the 锻炉面板 workflow are involved. Enforces dsh-novel-forge discipline: briefing before writing, ledger after every change, stage gates, one chapter at a time.
+description: 小说锻炉机械流程 + fiction-suite 方法论路由。触发词：写小说、写网文、开书、新书、续写、下一章、细纲、大纲、世界观、人物卡、去AI味、台账、定稿、交稿。novel_* 工具链、门禁、账本、版本化按本插件执行；创作方法论、阈值、去AI味词表、台账规范、平台口径一律以 fiction-suite 技能为准——先 skill 加载它，再按它的场景路由表读 references，禁止凭记忆。
 ---
 
-# 小说锻炉工作流
+# 小说锻炉 × fiction-suite 适配器
 
-长篇一致性靠工程不靠记忆。所有 novel_* 工具在本插件里；面板（锻炉 tab）是同一套数据的图形入口。
+本技能只写两件事：**把创作方法论路由到 fiction-suite**，以及**fiction-suite 布局下插件机械流程的接驳点**。
+briefing→write、一次一章、提案制、熔断、零前置说明这些硬纪律由插件常驻 systemPrompt 强制，此处不重复。
 
-## 首要原则（违反即返工）
+## 一、定位与加载顺序
 
-1. **一次只写一章**。写完立即停下，向用户汇报本章要点 + 下一章建议，等用户决定。绝不擅自连写。
-2. **写前必 briefing，写后必落账**：`novel_briefing` 拿上下文包再动笔；正文里的人物状态变化（境界/位置/持有/关系）通过 `novel_write_chapter` 的 `facts_updates` 落账，并建议带 `facts_evidence`（多行「实体|键|正文原句」）——证据会硬校验**必须逐字摘自本章正文**（忽略空白差异），找不到整章拒绝保存，所以要么照抄原句、要么别传。**认知变化同章声明**：人物初次得知某事、或读者知道了新真相，带 `cognition_updates`（多行「谁|知道|信息」/「谁|不知道|信息」/「读者|知道|信息」）——认知账本会在后续章节的简报里守住「谁知道什么」的边界（信息差、身份保密、伏笔未揭都靠它），简报「人物认知边界」段的「不知道」清单是硬边界，笔下人物绝不能未卜先知。另外：简报 warnings 里出现「硬约束被截断/整块被预算挤掉」时，照告警里的恢复路径（read 原文件 / `novel_ledger query`）补齐来源再动笔，不要按截断版写。
-3. **理解剧情线/伏笔回收只用工具，禁止扒原文件、禁止对全书深度探索**：引用「第 N 章时」的状态用 `novel_ledger status_at`；查某值哪章改的用 `timeline`；找前文段落用 `novel_search query`（没索引先 build）；**要搞懂某条伏笔怎么回收、某个人物弧光走到哪、某人对某事「知不知道」，直接 `novel_briefing`（带目标章号——包里已有伏笔摘要「埋设章·预计回收章·⚠超期·setup 原句」、认知边界、弧线）+ 按需 `novel_ledger foreshadow`/`novel_arc`/`novel_relation` 查**——这套就是为「不读全本也能掌握剧情线」设计的。**绝不用 bash/cat 直接 dump `novel.json` / `facts.json` / `伏笔.json` 等原始文件，也不对全书发起「深度探索」**：原始 JSON 没有叙事结构，还会把整本书塞进上下文挤爆本回合预算，模型拿到也拼不出剧情线，只会越挖越深（真机曾因此卡 5 分钟以上）。动笔前想知道什么，先想「哪个工具能给」，别去翻文件。
-4. **门禁是硬的**：细纲未 approve 不能写章；**每章字数按「本书自定义区间 > 投放平台口径 > 插件默认（2000–4000）」判定**——一律以 `novel_briefing` 的「本章字数目标」段为准，别拿工具描述里的默认数或上一本书的数字硬套（番茄 1500–3000 建议落 2800–2990；起点 2000–4000）；同章被拒 3 次熔断——回去改细纲/场景契约，不要换措辞硬压。
-5. **改稿两条通道，按目的选**：自己动笔改稿（含机审驳回后重写同一章）→ `novel_write_chapter`，同章追加新版本、旧版永不覆盖；要把修订登记成等用户批准的提案 → `novel_propose`（只登记，不动正文）。提案的「应用/丢弃」是用户主权动作——提完就停，告诉用户到面板点，绝不说「已生效」；同一章已有 pending 提案时不要重复提。
-6. **收尾=纯文字汇报，禁止 present**：正文由 `novel_write_chapter` 落盘即送达（面板立即可见），收尾汇报直接输出文字。不要调用宿主 present 交付章节（真机 85/108 次自拼路径失败并引发输出退化），也不要生成「present 预期失败→跳过」之类的占位步骤——收尾链路里没有这一步。
-7. **工具回合零前置说明**：调 `novel_write_chapter` 的那个回合，开头直接调工具（细纲→approve→场景→简报→写章，每步直接发起），一个字的前置说明都不写——单回合输出预算是稀缺资源（输入越大预算越小），前置解释 + 正文挤爆预算 = 工具调用中途截断、整回合白跑（200 章大书实测故障形状）。要说明的话，落盘成功后的收尾汇报里说。
-8. **回溯用摘录不整章读**：回合内核对前文优先 `novel_search`（`action:query`，检索词参数名 `q`）拿章号+摘录 / `novel_ledger status_at`、`timeline` 的时点值，不整章 `read` 正文——回合开头读进来的大块文本会一路挤占本回合所有后续步骤的输出预算。
-9. **引号用国标弯引号**：正文引号一律“”‘’（一层双线、二层单线交替），禁用直角引号「」『』——GB/T 15834—2011 横排文稿标准（RLHF 养成的直角引号偏好在这里不适用）。写章/提案落盘时会自动转换并在 warnings 计数，但那是兜底。
+| 层 | 来源 | 管什么 |
+|---|---|---|
+| 机械引擎 | 本插件 + 本技能 | novel_* 工具、门禁、账本、索引、版本化、双轨审计的**操作顺序** |
+| 方法论 | `fiction-suite` 技能 | 选题/赛道/大纲/细纲/节奏/去 AI 味/语言指纹/台账/平台口径/**全部阈值** |
 
-## 开新书（无书时按序走）
+1. 动笔前先 `skill` 加载 `fiction-suite`（以及本技能 `novel`，若目录未展开）。
+2. 打开它的「三、场景路由」表，按当前任务读对应 `references/*.md`；阈值只认 `spec-quality-gates.md`，台账只认 `spec-ledger.md`，去 AI 味只认 `spec-de-ai.md`。
+3. 技能不在目录里 → 明说「fiction-suite 未安装」，不要凭记忆编方法论；机械流程照常。
+4. 冲突裁决：**阈值/口径以 fiction-suite 规范为准，落盘行为以插件门禁为准**——门禁拦下的稿子不能靠规范解释放行。
 
-1. `novel_project init`（book/genre/logline 一句话立意）——**开书前先问一句每章字数**：用户给了就写成 `chars: "2500-3500"`（落库成本书事实，之后所有门禁/简报/提案都按它判），给了平台就写 `platform`（qidian/fanqie/jjwxc/qimao/feilu），两个都不要就别传（回落到插件默认口径，不许自己替用户定）。用户中途想改：`novel_project action=chars`。
-2. `novel_project promise` 写故事承诺书（本书承诺什么爽点、绝不做的事——每次写章自动注入）
-3. 设定固化：`novel_worldbook add`（关键词触发或 always 常驻）；人物 `novel_character save`（多角色同台务必建 voice 语言基因卡：句长/口头禅/禁忌）
-4. `novel_outline save_book` 全书大纲
-5. 逐章循环：`novel_outline save_chapter`（含 `## 本章必写场景` 与 `## 本章禁止偏离项` 契约段）→ `novel_outline approve` → `novel_scene save`（出场人物/隐藏人物/禁项；有反转要藏时 hidden 人物档案不进上下文、正文出现其名会被拦）→ `novel_write_chapter`（title/content/summary/facts_updates，可选 facts_evidence、cognition_updates）
-   - 「必写场景」格式照抄这个样子（拍写在场景行内括号里，或场景行下方的「拍：…」独立行，两种都认；**「：」前的摘要短语要能在正文里逐字出现，拍不要求逐字**）：
+## 二、唯一工具顺序（不要跳步）
 
-     ```markdown
-     ## 本章必写场景
+**开书**：`novel_project init`（先问每章字数/平台）→ `novel_project promise` 写故事承诺书 → `novel_worldbook add` / `novel_character save`（含 voice 语言基因卡）→ `novel_outline save_book` 全书大纲 → `novel_project phase` 看下一阶段入场条件。
 
-     - 渡口夜审：货单对不上，掌柜的汗比话多。（拍：船工当众发难）（拍：账册摊开对笔迹）（拍：一炷香内破绽自现）
-     - 巷口追击：有人比马队先到了一步。
-       拍：翻墙、截巷、换衣三段跑位
-       拍：追到死巷才发现追错人，真目标已出城
-     ```
-6. 伏笔：`novel_ledger foreshadow_setup` 必带 plan（预计回收章）；回收时 `foreshadow_payoff`。超期未回收优先安排，别开新钩盖旧账。
-7. **关系与弧线落账**（v1.4.0）：人物/组织**之间**的关系变化（盟友→仇敌、信任度升降…）随 `novel_relation update` 落账（多行「A|B|维度|值[|备注]」，(A,B) 与 (B,A) 自动归一）；单人物**弧光维度**（成长/无畏/嫌疑度…）随 `novel_arc update` 落账（多行「人物|维度|值[|趋势][|备注]」）。**三者别混**：境界/位置/持有 → 事实账本（`novel_ledger`）；人物间关系 → `novel_relation`；单人物弧光 → `novel_arc`。正文仍按旧关系写会被内容门禁每章 warning 点名（不拦）；弧线停走（≥15 章未推进）命中时写章链自动落 major 质量债（`novel_quality view` 可见）。收尾体检加跑 `novel_project check fullscan:true`（关系线/弧线/hard 质量债/无 plan 伏笔，零 token）。
+**每章**：
 
-## 续写已有书
+1. `novel_outline save_chapter`（含「## 本章必写场景」「## 本章禁止偏离项」）→ `novel_outline approve`
+2. `novel_scene save`（多人物/有反转要藏时；隐藏人物名不得进正文）
+3. `novel_briefing` 拿上下文包（本章字数目标、细纲、人物、账本、伏笔、认知边界）
+4. **动笔前检查**（fiction-suite 口径）：读 `01-节奏块规划`、`02-设定圣经/`、上一章结尾与对应 reference；番茄向先跑 `viral_novel_audit.py --kind hitrate`（方案/细纲），命中率不达标先改细纲，不硬写
+5. 成稿 → `novel_write_chapter`（门禁/机审/内容门禁/细纲契约一次过）
+6. 落账：`novel_ledger`（境界/位置/持有/伏笔/认知）、`novel_relation`（人物之间）、`novel_arc`（单人物维度），三者别混
+7. 审计：`novel_noai_scan` + `novel_audit`（平台/敏感）拿确定性数字；收尾纯文字汇报，**到此停**
 
-1. `novel_project status` 看阶段/章节/账本概况
-2. `novel_briefing` 组上下文包（锚段是语感样本——模仿味道，不抄词句；伏笔回收/剧情线/人物认知边界全在包里，理解剧情要靠它，别去 dump 原文件或发起全书深度探索——见原则 3）
-3. 按上一节第 5 步逐章循环推进
-4. 写完若干章跑 `novel_project check` 全书一致性体检（死人复活/伏笔倒挂/索引缺失）
+**续写**：`novel_project status` → `novel_briefing` → 循环上节；回溯用摘录不整章读——跨章回顾用 `novel_search` 的章号+摘录、`novel_ledger status_at/timeline` 的时点值，不要整章 `read` 正文。
 
-## 写作纪律
+## 三、目录契约（fiction-suite 布局，本发行版默认）
 
-- 先想画面再动笔；情绪用动作/环境/留白暗示，不直写；不用模板句与库存词（`novel_noai_scan` 交稿前扫）
-- 续写长篇先 `novel_style build` 建六维基线，交稿前 `check` 对照——出带维度报偏离方向，不把数字翻译成写作规则
-- 每 600–900 字一次微兑现（信息/小反转/情绪落点），章末留钩子——但不许用新悬念掩盖旧欠账
-- 字数不足被退稿时：把细纲场景写细写透，不是注水
+书 = 工作区里的一个目录；人类文档与机器状态分开：
 
-## 质检与发布
+| 内容 | fiction-suite 布局 | forge 兼容布局 |
+|---|---|---|
+| 正文 | `06-正文/第001章 章名.md` | `正文/第N章-标题-vK.md` |
+| 单章细纲 | `04-细纲/第001章.md`（一章一文件） | `大纲/细纲/第N章.md` |
+| 全书大纲 | `03-分卷大纲/全书大纲.md` | `大纲/全书大纲.md` |
+| 人物卡/语言指纹 | `05-角色语言指纹/<角色名>.md` | `人物/<角色名>.md` |
+| 故事承诺书 | `02-设定圣经/故事承诺书.md` | `设定/故事承诺书.md` |
+| 导出 | `导出/` | 同左 |
 
-- `novel_audit`：platform 按（起点吃长线结构与章末钩子 / 番茄吃前千字爽点）；`censor:true` 发书前必跑（启发式预筛，命中仍须人工复核）
-- 机审数字（novel_audit / novel_noai_scan / novel_diagnose）是证据，审稿结论必须引用；`novel_polish submit` 的 `review_quotes`（多行「位置|原文原句」）给了就硬校验——引文必须逐字（忽略空白）在**原文**里找到，太短/找不到即整章拒收；凭印象补全/改写转述的引文在这里被拦，不提供不校验（普通润色不受影响）
-- 导出 `novel_export`（md/txt，只允许落到 书/导出/ 内）
+- **机器状态**（两种布局都在书根，**禁止用 write/edit 手改**）：`novel.json`、`账本/facts.json`、`账本/伏笔.json`、`设定/*.json`、`.novel/`（审计/提案/索引/断点）。手改会被 repair 对账覆盖或绕过门禁与版本守卫。
+- 路径一律以**工具返回值**为准，不要自己拼（拼错或混进控制字符必 file not found）。
+- 细纲「一章一文件」是对 fiction-suite「第1-10章.md 分组」的有意偏离：插件契约覆盖率按单章机读，分组文件读不了。写进说明时如实告知用户。
+- 布局由插件配置 `layout` 决定；一个工作区同时只用一种。切换布局后旧书索引仍指向旧文件、新旧章会分家，**没有自动迁移**。
 
-## 面板联动
+## 四、双轨门禁（两把尺，并列汇报、不互相换算）
 
-面板按钮（润色/校对/导出/提案应用/批量起草）走旁路引擎，产物一律是提案（用户点「应用」才生效）；批量起草并发的第 2 章起看不到前章正文，连环悬念章不要并行。
+| 轨 | 何时 | 谁判 | 产物 |
+|---|---|---|---|
+| 写章轨 | 每章落盘前 | 插件机审 + 内容门禁 + 细纲契约 | 工具回执里的确定性数字 / 拒绝原因 |
+| 定稿轨 | 定稿、交稿、发布前 | fiction-suite Python 脚本 | 脚本 stdout + 退出码，原样进交付 |
+
+定稿轨命令（用户级技能默认在 `$HOME/.dsh/skills/fiction-suite/scripts/`；技能装到别处时以 `skill` 工具返回的 base directory 为准。`$HOME` 在 pwsh 与 bash 里都能展开，命令行可用 `tool-pwsh` 直接跑）：
+
+```bash
+# 通用定稿：字数/段落/对话/AI味/钩子/台账增量（--kind 只收「草稿」或「定稿」）
+python "$HOME/.dsh/skills/fiction-suite/scripts/novel_audit.py" --file "06-正文/第001章 章名.md" --kind 定稿
+# 番茄向单章评分：爽点/温度/钩子/台账
+python "$HOME/.dsh/skills/fiction-suite/scripts/viral_novel_audit.py" --file "06-正文/第001章 章名.md" --kind chapter
+# 对话专项：正文台词必须用中文弯引号，否则报「未检测到对话」
+python "$HOME/.dsh/skills/fiction-suite/scripts/dialogue_audit.py" --file "06-正文/第001章 章名.md"
+# 起点向量化质检（可选）
+python "$HOME/.dsh/skills/fiction-suite/scripts/check_chapter.py" "06-正文/第001章 章名.md"
+```
+
+- **必须引用实测输出**：关键 stdout 与退出码写进交付，禁止手写「已通过」替代；脚本不可用时标注「未实测」并降级人工核对，不宣称通过。
+- 退出码：0 通过；1 需处理（硬门禁或参数提醒，看输出区分）；2 参数/解析错误。非 0 先读输出再判断，硬门禁未过必须改后重跑。
+- 两轨数字口径不同：**并列汇报，不换算、不互相替代**；不同脚本之间也不可直接比较（见 fiction-suite 质检规范）。
+- 写章轨数字（`novel_audit` / `novel_noai_scan`）同样是证据；`novel_polish submit` 的 `review_quotes` 必须逐字在原文找到。
+
+## 五、节奏与交付纪律（只列接驳点）
+
+- 一次只写一章，写完停；「写一本小说」不等于一口气跑完全书。批量起草只在用户明确要求时建议，连环悬念章不并行。
+- 写章回执即交付：正文已落盘、面板可见，**禁止 present**、不自拼路径。
+- 改稿自己动笔走 `novel_write_chapter`；要用户批准的修订走 `novel_propose`（提完就停，应用是用户主权动作）。
+- 同章被连续驳回 3 次 = 熔断：不要换措辞硬压，回去改细纲（save_chapter + approve）或场景契约，改完计数自动清零。
+- **工具回合零前置说明**：要产出长文本的回合，开头直接调工具、不写前置说明；解释留到落盘后的汇报。
+- 正文引号一律国标弯引号“”‘’，禁直角引号「」『』。
+
+## 六、git 纪律（git 版本策略下）
+
+- 版本由 git 承担：同一章正文**只有一份文件**，改稿原地覆盖，历史在 commit 里。
+- **每章定稿、每次台账变更单独 commit**；提交信息写「改了什么 + 为什么」，不要 `update` 这类空话。
+- 提交前先 `git status`，不盲 `git add -A`；中文路径先 `git config --global core.quotepath false`。
+- **禁止** `.bak`、`备份/`、`第N章-旧.md`、手工 `-v2` 副本——git 已经是备份；里程碑才打 tag。
+- 写章回执提示「本书目录没有 .git」时，先按用户意愿 `git init` 并提交基线，再继续写。
+
+## 七、交付前自检
+
+- [ ] 已加载 fiction-suite，并读了本次场景对应的 reference（不是凭记忆）
+- [ ] 交付里写的是工具返回的真实路径（布局、章号、章名命名正确）
+- [ ] 三个账本按类落账（事实/关系/弧线），没有手改 `.json`
+- [ ] 定稿轨脚本已跑，stdout 与退出码原样附上（或明确标注「未实测」）
+- [ ] 一次只写一章，收尾已停、未调 present
+- [ ] 本轮改动已 commit（或已告知用户未提交）
