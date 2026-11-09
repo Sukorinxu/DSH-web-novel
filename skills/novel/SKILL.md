@@ -24,6 +24,8 @@ briefing→write、一次一章、提案制、熔断、零前置说明这些硬�
 
 **开书**：`novel_project init`（先问每章字数/平台）→ `novel_project promise` 写故事承诺书 → `novel_worldbook add` / `novel_character save`（含 voice 语言基因卡）→ `novel_outline save_book` 全书大纲 → `novel_project phase` 看下一阶段入场条件。
 
+**旧稿接入**（插件安装前用别的流程写的工作区，如 `正文/第N章 标题.md` + `细纲/`）：先 `novel_import action=scan`（只读扫描，可传 `source` 指定起点）发现候选；确认后 `novel_import action=adopt source="<candidates[].source>" book="<新书目名>"`（先 `dry_run:true` 预演）按**原章号**接入新书——源目录只读不动，同级 `细纲/` 会自动复制（「新第N章」这类重排细纲会跳过并如实报告）。旧稿的设定圣经/台账是 Markdown，工具不会自动拆成 worldbook/账本，需要时让模型读原文后用 `novel_worldbook add` / `novel_ledger update` 补录。
+
 **每章**：
 
 1. `novel_outline save_chapter`（含「## 本章必写场景」「## 本章禁止偏离项」）→ `novel_outline approve`

@@ -42,7 +42,9 @@ DeepSeek Harness（DSH）的中文长篇写作插件。它不是「提示词合�
 
 改造细节（目录映射、存量书迁移、取舍与回滚、验证清单）见 [FUSION.md](./FUSION.md)。
 `layout`/`versioning` 是**进程级**配置：一个工作区同时只用一种布局；切换后旧书索引仍指向旧文件、
-新旧章会分家，**没有自动迁移**（存量书要么继续 `layout: forge`，要么用 `novel_import` 重建）。
+新旧章会分家，**没有自动迁移**。存量书三条路：① 继续 `layout: forge`；② 旧稿工作区用
+`novel_import action=scan` 发现 + `action=adopt` 按原章号接入成新书（源目录只读）；③ 单文件源用
+`novel_import` 切分重建。详见 [FUSION.md](./FUSION.md) 第 5 节。
 
 ## 界面一览
 
@@ -178,7 +180,7 @@ novel_project init → novel_project phase（看九阶段看板，按提示补�
 | `novel_audit` | 确定性章节审计 + 契约指标 + `continuity` 全书一致性 + `voice` 语言基因核对 + `platform` **起点/番茄/晋江/七猫/飞卢五平台审稿** + `censor` **敏感自查七类** | 机审证据；平台体检表给出可执行改法 |
 | `novel_style` | 文笔六维基线（μ±σ 带）+ **氛围光谱 12 轴**：build 建基线 / check 对照（含主导氛围漂移） | 纯本地零费用；只报数不贴标签 |
 | `novel_propose` | 提案 / 列表 | 修订走提案，用户在面板应用；旧版永不覆盖 |
-| `novel_import` | 本地书籍导入（preview/import/**backfill 门禁回补**；file 支持 `.md`/`.txt`/`.docx`——docx 按 Word 标题样式与「第N章」规则切分） | 纯函数切分章节；建书+版本化落盘；docx 走 `readBytes` 字节通道（文本通道会解坏二进制），拒 zip64、48MB 解压上限 |
+| `novel_import` | 本地书籍导入与旧稿接入：`preview`/`import`/`backfill`；**`scan` 扫描工作区里插件安装前的旧稿工作区（`正文/第N章*.md`，只读）；`adopt` 按原章号接入成新书（源目录只读，同级 `细纲/` 一并复制）**；file 支持 `.md`/`.txt`/`.docx`——docx 按 Word 标题样式与「第N章」规则切分 | 纯函数切分章节；建书+版本化落盘；旧稿识别认阿拉伯/中文章号、同章草稿去重、章号缺口报告；docx 走 `readBytes` 字节通道（文本通道会解坏二进制），拒 zip64、48MB 解压上限 |
 | `novel_export` | 导出整本（md/txt + stats） | 按版本顺序拼装，写 `导出/` |
 | `novel_diagnose` | 黄金三章四维诊断（钩子/开场/冲突/灌输） | 确定性数字，机审与模型审分离 |
 | `novel_polish` | 段落级病灶定位 + 润色提案提交 + 审稿引文 grounding（`review_quotes`） | 润色也走提案制，永不覆盖旧稿；引文必须逐字（忽略空白）在原文里找到，太短/找不到即整章拒收 |

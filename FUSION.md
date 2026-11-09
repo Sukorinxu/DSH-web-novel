@@ -139,23 +139,39 @@ python "$HOME/.dsh/skills/fiction-suite/scripts/check_chapter.py" "06-正文/第
    Python 脚本即可；脚本只读文件，不关心布局。
 4. 代价：没有 fiction-suite 的目录结构；但存量书继续写、不迁移，风险最低。
 
-### 路线 B（推荐给新书/准备重开的书）：用 `novel_import` 重建进 fiction-suite 布局
+### 路线 B（推荐给「旧稿工作区」）：scan + adopt 一键接入
 
-1. **先留档**：旧书目录在 git 下就确认无杂物后 `git add` + `git commit`；不在 git 下就整体移到工作区外
-   备份（不要在工作区里建 `备份/`、`.bak`、`-旧.md`）。
-2. 先对旧书跑 `novel_project repair`（只对账、不搬文件）；再把正文按章号顺序**合并成一个 `.md`/`.txt`**（每章保留 `第N章 标题` 标题行；`versions` 书取每章最高 `vK`）。合并文件放工作区 `tmp/`，用完删除。
-3. 先跑 `novel_import action=preview`（给 `book`/`file`）核对切分结果：章数、每章标题、字数；
-   切分不对就调整合并文件的标题行，别硬导入。
-4. `novel_import action=import` 创建新书：正文按当前 `layout: fiction-suite` 落到
-   `06-正文/第001章 章名.md`，`novel.json` 与检索索引同步重建。
-5. 跑 `novel_import action=backfill`（可 `approve:true`）为导入章回补粗纲，让旧章回到门禁体系；
-   续写新章再正常 `novel_outline save_chapter` + `approve`。
-6. 补机器状态：导入**只重建正文与章节索引**，账本/伏笔/世界书/人物卡/大纲不在导入范围内。
-   按旧书内容用 `novel_ledger`、`novel_relation`、`novel_arc`、`novel_worldbook`、
+插件安装前的工作区（例如 `《书名》/_DeepSeek_workspace/` 里的 `正文/第N章 标题.md` +
+`细纲/` + `设定/`）不需要手工合并正文，走这条：
+
+1. **先留档**：旧目录在 git 下就 `git commit`；不在 git 下就整体移到工作区外备份
+   （不要在工作区里建 `备份/`、`.bak`、`-旧.md`）。接入是**只读源目录**，但留档仍是好习惯。
+2. `novel_import action=scan`（旧稿在更深处时传 `source:"《书名》"`）——只读扫描，
+   返回候选：章数、最新章、草稿数、章号缺口、`source`（正文目录）、`outlineDir`（细纲目录）、
+   样例章节名。
+3. `novel_import action=adopt source="<candidates[].source>" book="<新书目名>" dry_run:true`
+   预演：核对将写入的章数、总字数、细纲篇数。确认没有缺漏。
+4. 去掉 `dry_run` 正式接入：章节按**原章号**落到当前布局的 `06-正文/第001章 章名.md`
+   （同名多份时非草稿优先，草稿正文会去掉 `_AI初稿` 后缀），同级 `细纲/` 复制到 `04-细纲/`
+   （「新第N章」这类重排编号会跳过并报告）；`novel.json` 与章节索引重建；**源目录一字不动**。
+5. 补机器状态：`adopt` 只重建正文、索引与（可复制的）细纲；账本/伏笔/世界书/人物卡/全书大纲
+   **不会自动拆**。按旧书内容用 `novel_ledger`、`novel_relation`、`novel_arc`、`novel_worldbook`、
    `novel_character`、`novel_outline save_book` 重新登记（或至少补到能支撑下一章）。
-7. 校验：`novel_project status` 看阶段/章节；`novel_project check` 跑全书一致性；面板阅读器
-   逐章抽读；确认无路径缺失后再开写。
-8. 旧书目录：保留为只读档案（建议移出工作区或保留在 git 历史），**不要在旧目录上再写章**。
+6. 旧书按「存量旧书」对待（`outlineContract: warn`）：续写新章前先 `novel_outline save_chapter`
+   写带契约段的新细纲并 `approve`。
+7. 校验：`novel_project status` 看阶段/章节；`novel_project check` 跑全书一致性；面板逐章抽读；
+   确认无路径缺失后再开写。
+8. 旧稿目录：保留为只读档案（建议移出工作区或留在 git 历史），**不要在旧目录上再写章**。
+
+### 路线 C（手工/单文件源）：合并成单文件 + `novel_import` 切分
+
+源稿只有 txt/docx/单文件、或目录结构不规范（没有 `正文/` 分组）时：
+
+1. 按章号顺序合并成一个 `.md`/`.txt`（每章保留 `第N章 标题` 标题行；`versions` 书取每章最高 `vK`），
+   放工作区 `tmp/`，用完删除。
+2. `novel_import action=preview`（`book`/`file`）核对切分：章数、标题、字数；切分不对就调标题行。
+3. `novel_import action=import` 建书；再 `novel_import action=backfill`（可 `approve:true`）回补粗纲。
+4. 补机器状态同路线 B 第 5 步；旧目录保留只读。
 
 ## 6. 取舍与限制
 

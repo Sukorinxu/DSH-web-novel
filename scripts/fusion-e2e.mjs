@@ -106,6 +106,36 @@ try {
     check('机器状态仍在书根（novel.json / 账本/facts.json）',
         fs.existsSync(path.join(root, BOOK, 'novel.json')) && fs.existsSync(path.join(root, BOOK, '账本/facts.json')));
 
+    // ── 旧稿接入：scan 发现 + adopt 按原章号接入（源目录只读） ──────────────
+    const legacyRoot = path.join(root, '旧稿工作区');
+    fs.mkdirSync(path.join(legacyRoot, '正文'), { recursive: true });
+    fs.mkdirSync(path.join(legacyRoot, '细纲'), { recursive: true });
+    fs.writeFileSync(path.join(legacyRoot, '正文', '第1章 群演的我.md'), '第1章正文：群演的第一天，手机里冒出个顶流群。\n');
+    fs.writeFileSync(path.join(legacyRoot, '正文', '第2章 二次试镜_AI初稿.txt'), '第2章 AI 初稿：第二次试镜，台词只错了一个字。\n');
+    fs.writeFileSync(path.join(legacyRoot, '正文', '第3章 顶流来敲门.md'), '第3章正文：有人敲门，门外站着两个顶流。\n');
+    fs.writeFileSync(path.join(legacyRoot, '细纲', '第1章细纲.md'), '# 第1章细纲\n- 场景：群演现场\n');
+    fs.writeFileSync(path.join(legacyRoot, '细纲', '新第1章细纲（重排版）.md'), '# 重排细纲（不应接入）\n');
+
+    const scan = await call('novel_import', { action: 'scan', source: '旧稿工作区' });
+    const scanned = (scan.candidates ?? []).find((c) => c.source === '旧稿工作区/正文');
+    check('scan 发现旧稿工作区（source=旧稿工作区/正文）', scanned !== undefined && scanned.chapters === 3, JSON.stringify(scan.candidates ?? []));
+    check('scan 报告的细纲目录正确', scanned?.outlineDir === '旧稿工作区/细纲', String(scanned?.outlineDir));
+
+    const dry = await call('novel_import', { action: 'adopt', book: '旧稿接入书', source: '旧稿工作区', dry_run: true });
+    check('adopt dry_run 报告 3 章且不落盘', dry.chapters === 3 && dry.dryRun === true && !fs.existsSync(path.join(root, '旧稿接入书/novel.json')), JSON.stringify(dry));
+    const adopted = await call('novel_import', { action: 'adopt', book: '旧稿接入书', title: '旧稿接入书', genre: '都市', source: '旧稿工作区' });
+    check('adopt 接入 3 章', adopted.chapters === 3 && adopted.chars > 0, JSON.stringify(adopted));
+    check('章节按原章号落 06-正文（含去草稿后缀）',
+        fs.existsSync(path.join(root, '旧稿接入书/06-正文/第001章 群演的我.md'))
+        && fs.existsSync(path.join(root, '旧稿接入书/06-正文/第002章 二次试镜.md'))
+        && fs.existsSync(path.join(root, '旧稿接入书/06-正文/第003章 顶流来敲门.md')),
+        JSON.stringify(fs.existsSync(path.join(root, '旧稿接入书/06-正文')) ? fs.readdirSync(path.join(root, '旧稿接入书/06-正文')) : []));
+    check('adopt 复制旧细纲到 04-细纲', fs.existsSync(path.join(root, '旧稿接入书/04-细纲/第001章.md')));
+    check('重排「新第N章细纲」未被误接', !fs.existsSync(path.join(root, '旧稿接入书/04-细纲/第002章.md')));
+    const adoptedMeta = JSON.parse(fs.readFileSync(path.join(root, '旧稿接入书/novel.json'), 'utf8'));
+    check('adopt 后 novel.json 索引 3 章且 latest=1', Object.keys(adoptedMeta.chapters).length === 3 && adoptedMeta.chapters['2'].latest === 1, JSON.stringify(adoptedMeta.chapters['2'] ?? {}));
+    check('源旧稿目录只读（文件仍在原处）', fs.existsSync(path.join(legacyRoot, '正文', '第1章 群演的我.md')));
+
     // 布局切换不改机器状态：切回 forge 后再建一本书，文档目录应回到 正文/ 大纲/
     const { configureLayout } = await import('../lib/layout.js');
     configureLayout({ layout: 'forge', versioning: 'versions' });
