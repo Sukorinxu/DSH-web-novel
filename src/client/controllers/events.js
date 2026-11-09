@@ -246,7 +246,11 @@ export function createEventsController(ctx) {
 			case 'back-from-settings': state.view = state.selected ? 'detail' : 'projects'; notify(); break;
 			case 'goto-settings': state.view = 'settings'; state.settingsOk = ''; state.settingsError = ''; notify(); break;
 	// H5 网页版浮层（1.8）：iframe 独立渲染，开/关/刷新都只动 state.h5Overlay
-	case 'h5-open': state.h5Overlay = { book: state.selected || null, key: Date.now() }; notify(); break;
+	case 'h5-open': state.panelMode = 'h5'; persistPanelMode('h5'); notify(); break;
+	// 面板形态切换（1.9）：H5 默认；经典面板是手动入口。localStorage 记住用户选择。
+	case 'panel-mode-h5': state.panelMode = 'h5'; persistPanelMode('h5'); notify(); break;
+	case 'panel-mode-react': state.panelMode = 'react'; persistPanelMode('react'); notify(); break;
+	case 'h5-refresh': state.h5RefreshKey = (state.h5RefreshKey ?? 0) + 1; notify(); break;
 	case 'h5-close': state.h5Overlay = null; notify(); break;
 	case 'h5-reload':
 		if (state.h5Overlay) {
@@ -448,6 +452,10 @@ export function createEventsController(ctx) {
 	};
 
 	let bound = null;
+	/** 面板形态持久化：读不到 localStorage（隐私模式/测试）就静默跳过，不影响切换。 */
+	const persistPanelMode = (mode) => {
+		try { localStorage.setItem('nf-panel-mode', mode); } catch { /* 忽略 */ }
+	};
 	const attach = (node) => {
 		if (!node || bound === node) return;
 		detach();

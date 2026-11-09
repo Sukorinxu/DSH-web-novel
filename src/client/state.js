@@ -73,9 +73,15 @@ export function initialState() {
 		// 宽屏阅读/编辑浮层（FUSION 1.7）：{ no, title, text, loading, editing, draft, saving, error } | null
 		// 右栏窄，长章阅读/改稿走宿主页面宽度的浮层；读与写是同一份数据（读态 → 点「编辑」）。
 		readerOverlay: null,
-		// H5 网页版浮层（1.8）：{ book, key } | null —— iframe 载 /api/novel-forge/h5，
-		// H5 页面是零依赖单文件（lib/h5-page.js），数据和 React 面板走同一套 REST 门禁。
-		// key 变化 = 强制刷新 iframe（重载按钮换 key，避免直接操作 iframe DOM）。
+		// 面板形态（1.9）：'h5'（默认，右侧栏直接渲染 H5 网页版）| 'react'（经典面板，手动入口）。
+		// 用户 2026-11-09 定：H5 是默认展示，原有 React 窗口降级为手动入口。
+		// localStorage 持久化；测试/无 DOM 环境读不到就回默认 'h5'。
+		panelMode: (() => {
+			try { return localStorage.getItem('nf-panel-mode') === 'react' ? 'react' : 'h5'; } catch { return 'h5'; }
+		})(),
+		// H5 内嵌页刷新计数：换 key 强制 iframe 重载（不直接操作 iframe DOM）
+		h5RefreshKey: 0,
+		// H5 网页版浮层（兼容旧入口）：{ book, key } | null
 		h5Overlay: null,
 		// 设置页（本书设置：字数区间 / 平台 / logline）：保存中 / 成功提示 / 服务端错误原文
 		settingsSaving: false, settingsOk: '', settingsError: '',

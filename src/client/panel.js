@@ -21,13 +21,12 @@ import { apiFetch, setSessionProvider } from './api.js';
 import { createTtsPlayer, resolveSynth } from './tts.js';
 import {
 	rootStyle, bodyStyle, headerStyle, brandMarkStyle, titleStyle, subtitleStyle,
-	chip, space, color,
+	chip, space, color, font, weight,
 } from './styles.js';
 import { ProjectListView } from './views/project-list.js';
 import { ProjectDetailView } from './views/project-detail.js';
 import { LorebookView } from './views/lorebook.js';
 import { SettingsView } from './views/settings.js';
-import { H5Overlay } from './views/h5-overlay.js';
 // 面板根属性 + 交互态样式表（:hover/:active 只能靠样式表，内联压不过它们）
 import { PANEL_ATTR, ensureStyles } from './css.js';
 // 业务域子控制器：各自只依赖共享 ctx（state/notify/seq/player + 晚绑定的跨域动作）
@@ -194,6 +193,17 @@ function panelSubtitle(s) {
 }
 
 /**
+ * H5 内嵌页地址：书/会话可缺省（H5 自己展示书架）。
+ * 不用 URLSearchParams：测试的 headless 沙箱只提供最小 DOM，没有这个全局对象。
+ */
+function panelH5Src(s) {
+	const parts = ['embed=1'];
+	if (s.selected) parts.push(`book=${encodeURIComponent(s.selected)}`);
+	if (s.sessionId) parts.push(`session=${encodeURIComponent(s.sessionId)}`);
+	return `/api/novel-forge/h5?${parts.join('&')}`;
+}
+
+/**
  * 右侧栏面板组件（slot 框架渲染它）。
  * props.sessionId 由 forge-tab.js 的 inject 工厂注入；props.resolveSessionId 由
  * index.js 的包装闭包注入（读 sessions 服务的当前会话 —— 0.13.2 起 slot 标识
@@ -238,7 +248,69 @@ export function ForgePanel(props) {
 		};
 	}, []);
 
+	// H5 页内「经典面板」按钮走 postMessage（iframe 内不能直接改宿主 state）。
+	useEffect(() => {
+		const onMessage = (e) => {
+			if (e?.data?.type !== 'nf-h5-classic') return;
+			controller.state.panelMode = 'react';
+			try { localStorage.setItem('nf-panel-mode', 'react'); } catch { /* 忽略 */ }
+			forceTick((n) => n + 1);
+		};
+		window.addEventListener('message', onMessage);
+		return () => window.removeEventListener('message', onMessage);
+	}, []);
+
 	const s = controller.state;
+
+	// 默认形态：右侧栏整块渲染 H5 网页版（独立渲染、PC 宽屏优先）。经典 React 面板是
+	// 手动入口（顶部条「经典面板」或设置页按钮）；选择存 localStorage。
+	if (s.panelMode !== 'react') {
+		return h('div', {
+			[PANEL_ATTR]: '1',
+			ref: nodeRef,
+			'data-nf-panel-mode': 'h5',
+			style: { height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', background: color.surface1 },
+		},
+			h('div', {
+				style: {
+					flex: 'none', display: 'flex', alignItems: 'center', gap: space.sm,
+					padding: '5px 8px', borderBottom: `1px solid ${color.border1}`, background: color.surface2,
+				},
+			},
+				h('span', { style: { fontWeight: weight.semibold, fontSize: font.small, flex: 'none' } }, '🔨 锻炉 · H5'),
+				h('span', {
+					style: {
+						flex: '1 1 auto', minWidth: 0, fontSize: font.caption, color: color.text3,
+						overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+					},
+				}, s.detail?.title || s.selected || '作品详情'),
+				h('button', {
+					'data-action': 'panel-mode-react',
+					'data-nf-btn': '1', 'data-variant': 'secondary',
+					title: '切到经典 React 面板（手动入口）',
+					style: { flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', lineHeight: 1, padding: '4px 7px', borderRadius: '6px' },
+				}, '经典面板'),
+				h('button', {
+					'data-action': 'h5-refresh',
+					'data-nf-btn': '1', 'data-variant': 'secondary',
+					title: '刷新 H5',
+					style: { flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', lineHeight: 1, padding: '4px 7px', borderRadius: '6px' },
+				}, '↻'),
+				h('a', {
+					href: panelH5Src(s), target: '_blank', rel: 'noreferrer noopener',
+					title: '在浏览器新窗口打开（宽屏阅读）',
+					style: { flex: 'none', fontSize: font.caption, color: color.text2, textDecoration: 'none', padding: '3px 5px' },
+				}, '↗'),
+			),
+			h('iframe', {
+				key: `panel-h5-${s.selected ?? ''}-${s.sessionId ?? ''}-${s.h5RefreshKey ?? 0}`,
+				src: panelH5Src(s),
+				title: 'H5 网页版面板',
+				style: { flex: '1 1 auto', width: '100%', minHeight: 0, border: 0, background: '#f5f6f7' },
+			}),
+		);
+	}
+
 	const view = h('div', {
 		[PANEL_ATTR]: '1',
 		ref: nodeRef,
@@ -263,17 +335,17 @@ export function ForgePanel(props) {
 				: h('span', {
 					style: { ...chip({ tone: 'neutral' }), alignSelf: 'flex-start' },
 				}, '全部项目'),
-			// H5 网页版入口：常驻头部 —— 面板卡顿时用户要能一键切到 H5 版（iframe 内独立渲染）
+			// 形态切换：H5 是默认展示，经典面板是手动入口（1.9）
 			h('button', {
-				'data-action': 'h5-open',
+				'data-action': 'panel-mode-h5',
 				'data-nf-btn': '1', 'data-variant': 'secondary',
 				title: 'H5 网页版（移动优先阅读/工作台，独立渲染不拖面板）',
-				'aria-label': '打开 H5 网页版',
+				'aria-label': '切换到 H5 网页版',
 				style: {
 					flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px',
 					lineHeight: 1, padding: '5px 8px', borderRadius: '8px',
 				},
-			}, 'H5'),
+			}, 'H5版'),
 			// 设置入口常驻在头部：详情页/世界书页都够不到列表页那个按钮，
 			// 用户想看一眼「面板到底能做什么」时不该先退回列表
 			h('button', {
@@ -294,8 +366,6 @@ export function ForgePanel(props) {
 			s.view === 'lorebook' ? h(LorebookView, { state: s }) : null,
 			s.view === 'settings' ? h(SettingsView, { state: s }) : null,
 		),
-		// H5 浮层挂在面板根节点里（与宽屏阅读浮层同级）：iframe 独立渲染、独立滚动。
-		h(H5Overlay, { state: s }),
 	);
 
 	return ForgeBoundary ? h(ForgeBoundary, null, view) : view;
