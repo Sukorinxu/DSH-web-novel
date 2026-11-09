@@ -72,6 +72,10 @@ const ROUTES = [
     // 所以它在 fence 全覆盖用例里显式跳过，另有独立用例断言「壳 200、数据 403」。
     { name: 'POST /projects/:id/settings（本书设置）', method: 'POST', url: `${PREFIX}/projects/护栏本/settings` },
     { name: 'GET /h5（H5 面板外壳，豁免 fence）', method: 'GET', url: `${PREFIX}/h5`, fenceExempt: true },
+    // 1.11：全工具桥接（H5 完整控制台）
+    { name: 'GET /tools（工具清单 + 输入 schema）', method: 'GET', url: `${PREFIX}/tools` },
+    { name: 'GET /workspaces（扫描根）', method: 'GET', url: `${PREFIX}/workspaces` },
+    { name: 'POST /rpc（执行 novel_* 工具）', method: 'POST', url: `${PREFIX}/rpc` },
     { name: 'POST /projects/:id/clone', method: 'POST', url: `${PREFIX}/projects/护栏本/clone` },
     { name: 'GET /worldbook/:bookId', method: 'GET', url: `${PREFIX}/worldbook/护栏本` },
     { name: 'POST /worldbook/:bookId', method: 'POST', url: `${PREFIX}/worldbook/护栏本` },
@@ -1091,8 +1095,23 @@ test('R1+ H5 外壳免 fence 但数据面不豁免', async () => {
     assert.equal(shell.headers['x-frame-options'], undefined, 'H5 外壳不得设置 X-Frame-Options（会拦白侧栏 iframe）');
     assert.match(String(shell.body), /造神/, 'H5 品牌文案应为「造神」');
     assert.match(String(shell.body), /世界书/, 'H5 应展示世界书入口');
+    assert.match(String(shell.body), /工具台/, 'H5 应有完整工具台入口');
     const data = await drive({ method: 'GET', url: `${PREFIX}/projects`, fence: false });
     assert.equal(data.statusCode, 403, '数据面不带 fence 必须仍 403');
+});
+
+test('R1+ 全工具桥接：/tools 清单可读；/rpc 未知工具 400；workspace 越界 403', async () => {
+    const list = await drive({ method: 'GET', url: `${PREFIX}/tools` });
+    assert.equal(list.statusCode, 200, `工具清单应 200，实际 ${list.statusCode}：${list.body.slice(0, 200)}`);
+    assert.ok(Array.isArray(list.json.value.tools) && list.json.value.tools.length >= 20, '应暴露至少 20 个 novel_* 工具');
+    assert.ok(list.json.value.tools.some((t) => t.name === 'novel_write_chapter'), '清单必须含 novel_write_chapter');
+    assert.ok(list.json.value.tools.every((t) => t.inputSchema?.type === 'object'), '每个工具都要有 object 输入 schema');
+    const unknown = await drive({ method: 'POST', url: `${PREFIX}/rpc`, body: { tool: 'not_a_tool', args: {} } });
+    assert.equal(unknown.statusCode, 400, `未知工具应 400，实际 ${unknown.statusCode}`);
+    assert.equal(unknown.json.error?.code, 'UNKNOWN_TOOL');
+    const badRoot = await drive({ method: 'POST', url: `${PREFIX}/rpc`, body: { tool: 'novel_project', args: { action: 'status', book: '护栏本' }, workspace: 'C:/definitely-not-allowed' } });
+    assert.equal(badRoot.statusCode, 403, `workspace 越界应 403，实际 ${badRoot.statusCode}`);
+    assert.equal(badRoot.json.error?.code, 'WORKSPACE_FORBIDDEN');
 });
 
 // 拆分回归（04e377a）：polish/proofread 分支曾 `return runChapterRevision(...)`——
