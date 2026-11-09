@@ -136,6 +136,16 @@ try {
     check('adopt 后 novel.json 索引 3 章且 latest=1', Object.keys(adoptedMeta.chapters).length === 3 && adoptedMeta.chapters['2'].latest === 1, JSON.stringify(adoptedMeta.chapters['2'] ?? {}));
     check('源旧稿目录只读（文件仍在原处）', fs.existsSync(path.join(legacyRoot, '正文', '第1章 群演的我.md')));
 
+    // 旧稿接入后的索引回填：章节摘要（写前简报的「前情提要」依赖它）
+    const sums = await call('novel_project', {
+        action: 'summaries', book: '旧稿接入书',
+        summaries: '1|群演第一天，手机里冒出顶流群\n2|二次试镜只错了一个字\n99|不存在的章',
+    });
+    check('summaries 回填 2 章并跳过缺章', sums.summariesUpdated?.length === 2 && sums.summariesSkipped?.length === 1, JSON.stringify(sums));
+    const metaWithSums = JSON.parse(fs.readFileSync(path.join(root, '旧稿接入书/novel.json'), 'utf8'));
+    check('摘要写进 novel.json 章节索引', metaWithSums.chapters['1']?.summary === '群演第一天，手机里冒出顶流群'
+        && (metaWithSums.chapters['3']?.summary ?? '') === '', JSON.stringify(metaWithSums.chapters));
+
     // 布局切换不改机器状态：切回 forge 后再建一本书，文档目录应回到 正文/ 大纲/
     const { configureLayout } = await import('../lib/layout.js');
     configureLayout({ layout: 'forge', versioning: 'versions' });
