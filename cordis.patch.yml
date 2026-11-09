@@ -38,11 +38,11 @@
       name: '@deepseek-ai/dsh-agent-preset'
       config:
         id: 'novel-forge'
-        name: "小说锻炉"
+        name: "造神"
         description: "机械引擎 × fiction-suite 方法论：写前简报、阶段门禁、事实/关系/弧线账本、双轨审计与 git 版本化由插件代码强制；选题、节奏、去 AI 味、阈值与平台口径一律路由到用户技能 fiction-suite。"
         order: 5
         plugins:
-          # novel-forge 预设（融合版）：小说锻炉机械引擎 × fiction-suite 方法论。
+          # novel-forge 预设（融合版）：造神机械引擎 × fiction-suite 方法论。
           #
           # 分工：persona 只写「方法论路由 / 机械流程差异 / 双轨质检 / 目录与版本」四件事；
           # briefing→write、一次一章、提案制、熔断、回合预算等硬纪律由插件 systemPrompt

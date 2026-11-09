@@ -1,9 +1,9 @@
 ---
 name: novel
-description: 小说锻炉机械流程 + fiction-suite 方法论路由。触发词：写小说、写网文、开书、新书、续写、下一章、细纲、大纲、世界观、人物卡、去AI味、台账、定稿、交稿。novel_* 工具链、门禁、账本、版本化按本插件执行；创作方法论、阈值、去AI味词表、台账规范、平台口径一律以 fiction-suite 技能为准——先 skill 加载它，再按它的场景路由表读 references，禁止凭记忆。
+description: 造神机械流程 + fiction-suite 方法论路由。触发词：写小说、写网文、开书、新书、续写、下一章、细纲、大纲、世界观、人物卡、去AI味、台账、定稿、交稿。novel_* 工具链、门禁、账本、版本化按本插件执行；创作方法论、阈值、去AI味词表、台账规范、平台口径一律以 fiction-suite 技能为准——先 skill 加载它，再按它的场景路由表读 references，禁止凭记忆。
 ---
 
-# 小说锻炉 × fiction-suite 适配器
+# 造神 × fiction-suite 适配器
 
 本技能只写两件事：**把创作方法论路由到 fiction-suite**，以及**fiction-suite 布局下插件机械流程的接驳点**。
 briefing→write、一次一章、提案制、熔断、零前置说明这些硬纪律由插件常驻 systemPrompt 强制，此处不重复。

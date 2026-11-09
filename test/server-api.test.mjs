@@ -1086,6 +1086,11 @@ test('R1+ H5 外壳免 fence 但数据面不豁免', async () => {
     assert.equal(shell.statusCode, 200, `H5 外壳应 200，实际 ${shell.statusCode}：${shell.body.slice(0, 200)}`);
     assert.match(String(shell.headers['content-type'] ?? ''), /text\/html/, 'H5 外壳必须是 text/html');
     assert.ok(String(shell.body).includes('<!doctype html>') || String(shell.body).includes('<!DOCTYPE html>'), 'H5 外壳应是完整 HTML 文档');
+    // 回归护栏：X-Frame-Options 会拦掉 DSH 侧栏 / 聊天链接预览的 iframe（localhost 与
+    // 127.0.0.1 不同源时直接白屏）。H5 外壳必须可被嵌；数据面仍由 fence 守。
+    assert.equal(shell.headers['x-frame-options'], undefined, 'H5 外壳不得设置 X-Frame-Options（会拦白侧栏 iframe）');
+    assert.match(String(shell.body), /造神/, 'H5 品牌文案应为「造神」');
+    assert.match(String(shell.body), /世界书/, 'H5 应展示世界书入口');
     const data = await drive({ method: 'GET', url: `${PREFIX}/projects`, fence: false });
     assert.equal(data.statusCode, 403, '数据面不带 fence 必须仍 403');
 });

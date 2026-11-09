@@ -2,7 +2,7 @@
 //
 // 为什么这么写：0.4.0 用 `code.includes('mountSidebarEntry')` 守着入口，
 // 于是「插一次就被 React 冲掉、之后永不自愈」这个真 bug 一路 77/77 全绿、
-// 真机锻炉整个消失。现在真跑 apply()，断言**实际注册了什么、实际打了哪些请求**。
+// 真机造神整个消失。现在真跑 apply()，断言**实际注册了什么、实际打了哪些请求**。
 //
 // 0.5.0 换了入口路线（左侧栏 DOM 注入 → 右侧栏 tab 三步契约）+ 会话语义
 // （项目跟会话走），本文件围绕这两件事重建：
@@ -103,7 +103,7 @@ test('① 声明 tab 类型：register 收到 page type（id / kind / 常量标�
     assert.equal(def.patterns, undefined, '不给 patterns ⇒ page type（由 kind 打开，不认领地址）');
     assert.equal(typeof def.title, 'function', 'title 必须是函数（thunked copy）');
     // page type 的 title 由 pageAddress(kind) = `sidebar://<kind>` 调用；我们返回常量
-    assert.match(def.title('sidebar://' + TAB_KIND), /锻炉/, 'tab chip 必须有可见文案');
+    assert.match(def.title('sidebar://' + TAB_KIND), /造神/, 'tab chip 必须有可见文案');
     assert.ok(Array.isArray(def.guide) && def.guide.length > 0, '★ 必须有 guide 入口胶囊（自动打开失败时的保底通道）');
     assert.equal(typeof def.guide[0].title, 'function');
     assert.equal(typeof def.guide[0].description, 'function');
@@ -128,7 +128,7 @@ test('② 注册内容 seat：key 用 definition.id，且 inject 工厂能拿到
 
 // ── ③ 打开时机：有项目才显示 ──
 
-// ── ③ 打开：锻炉是右侧栏常驻的独立 tab（autoOpenPanel 闸，issue #8）──
+// ── ③ 打开：造神是右侧栏常驻的独立 tab（autoOpenPanel 闸，issue #8）──
 
 // 打开闸现在是 async（fetch /panel-config → microtask 链 → openForgeTab 排定时器），
 // 而 flush 的 round 在首轮 splice 时队列还空就 return——先 setImmediate 让链跑完再 flush。
@@ -137,7 +137,7 @@ async function drainGate(mod) {
     await mod.timers.flush(3);
 }
 
-test('★ ③ 独立 tab：锻炉常驻右侧栏——本会话没有项目也照常打开', async () => {
+test('★ ③ 独立 tab：造神常驻右侧栏——本会话没有项目也照常打开', async () => {
     const { mod, opened } = boot({ sessionId: 's1' }, { fetch: scriptedFetch([{ value: [] }]).fetch });
     await drainGate(mod);
     assert.ok(opened.includes(TAB_KIND),

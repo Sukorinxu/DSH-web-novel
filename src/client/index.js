@@ -32,7 +32,7 @@ import { H5Overlay } from './views/h5-overlay.js';
 
 // 版本号：必须与 package.json 的 version 一致。
 // build-client.mjs 会把它与 package.json 对账，不一致直接构建失败（防发行漂移）。
-const PLUGIN_VERSION = '1.9.0';
+const PLUGIN_VERSION = '1.10.0';
 
 // 供视图头部徽标读取 —— 让视图层不必反向 import 入口（避免循环依赖）。
 window.__NOVEL_FORGE_VERSION__ = PLUGIN_VERSION;
@@ -71,9 +71,9 @@ function apply(ctx) {
 		console.error('[novel-forge] 右侧栏 tab 注册失败（可从右侧栏 guide 页手动进入）', error);
 	}
 
-	// ③ 打开：锻炉是右侧栏**常驻独立 tab** —— 会话里有没有项目都打开。
+	// ③ 打开：造神是右侧栏**常驻独立 tab** —— 会话里有没有项目都打开。
 	//    之前 0.5.0 一度收进「本会话有项目才开」的门控，真机没项目（或 API 没命中）
-	//    时右侧栏就没了那个独立「锻炉」，用户要的是"右侧栏 · 单独的"。
+	//    时右侧栏就没了那个独立「造神」，用户要的是"右侧栏 · 单独的"。
 	//    面板内部仍按会话语义过滤项目列表，空会话给引导空态（见 project-list.js），
 	//    所以无条件打开不会露丑。延迟重试由 openForgeTab 自己兜（seat 未挂载会抛）。
 	//
@@ -94,7 +94,7 @@ function apply(ctx) {
 				disposed = true;
 				if (typeof openedByAuto === 'function') openedByAuto();
 			},
-				'dsh-novel-forge: 自动打开锻炉 tab');
+				'dsh-novel-forge: 自动打开造神 tab');
 		}
 		const gate = (typeof fetch === 'function')
 			? apiFetch('/panel-config', { timeoutMs: 2000 }).then(
@@ -108,11 +108,11 @@ function apply(ctx) {
 				// 由上方 effect 登记的清理函数在卸载时调用。
 				openedByAuto = openForgeTab(ctx);
 			} catch (error) {
-				console.warn('[novel-forge] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"小说锻炉"）', error);
+				console.warn('[novel-forge] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"造神"）', error);
 			}
 		}, () => {});
 	} catch (error) {
-		console.warn('[novel-forge] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"小说锻炉"）', error);
+		console.warn('[novel-forge] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"造神"）', error);
 	}
 
 	// 保底开关：自动打开失败时，控制台敲一行即可打开；

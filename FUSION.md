@@ -1,4 +1,4 @@
-# 小说锻炉 × fiction-suite 融合说明（FUSION）
+# 造神 × fiction-suite 融合说明（FUSION）
 
 > 面向本改造发行版的用户与维护者。插件本体仍以 README 为准；本文只讲「融合改造」这一层：
 > 为什么改、配置怎么选、目录怎么对应、双轨审计怎么跑、存量书怎么办、怎么回滚。
@@ -6,7 +6,7 @@
 ## 1. 定位
 
 - **引擎与方法论分离**：dsh-novel-forge 继续当机械引擎——23 个 `novel_*` 工具、九阶段门禁、
-  事实/关系/弧线账本、提案制、右侧栏「锻炉」面板；用户的 `fiction-suite` 技能当方法论——
+  事实/关系/弧线账本、提案制、右侧栏「造神」面板；用户的 `fiction-suite` 技能当方法论——
   选题、赛道、大纲、细纲、节奏、去 AI 味、语言指纹、台账规范、平台口径与**全部阈值**。
 - **书稿目录跟 fiction-suite 走，机器状态保留插件格式**：正文/细纲/大纲/人物卡/承诺书按
   fiction-suite 的落盘规范命名；`novel.json`、`账本/`、`设定/*.json`、`.novel/` 仍是插件
@@ -232,7 +232,7 @@ C:\Users\xuaol\.dsh\profiles\desktop\package.json
   改完不重生成 = 预设还是旧的（`test/fusion-layout.test.mjs` 会报漂移）。
 - **重装**：`plugin_manager action=install_bundle target=F:\DSHcache\dsh-novel-forge`；
   仓库被移动/删除后 link 会失效，必须重装（或重新 link 后重启）。
-- **首次使用**：新建会话，在预设列表里选「小说锻炉」（Loader 行 `preset-novel-forge`）；
+- **首次使用**：新建会话，在预设列表里选「造神」（Loader 行 `preset-novel-forge`）；
   旧会话不会自动换成新预设。
 - **验证是否真的生效**：
   - `plugin_manager list_plugins` 里 `include:dsh-novel-forge` 与 `include:preset-novel-forge`

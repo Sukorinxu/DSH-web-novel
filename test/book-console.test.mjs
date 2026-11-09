@@ -1,4 +1,4 @@
-// test/book-console.test.mjs — 「锻炉」数据面解析核心的纯函数门禁。
+// test/book-console.test.mjs — 「造神」数据面解析核心的纯函数门禁。
 // 用插件真实数据结构（lib/store.js / lib/ledger.js 同形）喂入，验证摘要正确且绝不崩。
 
 import { test } from 'node:test';

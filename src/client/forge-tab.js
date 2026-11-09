@@ -28,12 +28,12 @@ export function tabDefinition() {
 		id: TAB_ID,
 		kind: TAB_KIND,
 		priority: 'extension',
-		title: () => '🔨 锻炉',
+		title: () => '🔨 造神',
 		// guide 是「右侧栏常驻页」里的入口胶囊 —— 跨会话都在，
 		// 自动打开失败 / 被用户关掉时，这是手动通道（保底入口）。
 		guide: [{
 			order: 90,
-			title: () => '小说锻炉',
+			title: () => '造神',
 			description: () => '本会话的小说项目：章节 / 账本 / 世界书',
 		}],
 	};
@@ -79,7 +79,7 @@ export function openForgeTab(ctx, opts = {}) {
 		try {
 			ctx.sidebarRight.openTab(TAB_KIND);
 			opened = true;
-			log.info('[novel-forge] 已打开右侧栏 tab（锻炉）');
+			log.info('[novel-forge] 已打开右侧栏 tab（造神）');
 			return true;
 		} catch (error) {
 			tries += 1;

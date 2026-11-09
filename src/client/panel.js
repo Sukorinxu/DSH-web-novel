@@ -1,4 +1,4 @@
-// src/client/panel.js — 右侧栏「锻炉」面板：控制器装配（状态 + 共享 ctx + 子控制器接线）+ React 组件。
+// src/client/panel.js — 右侧栏「造神」面板：控制器装配（状态 + 共享 ctx + 子控制器接线）+ React 组件。
 //
 // 与 0.4.x 的差别：那时候是一个**自建 root 的全屏抽屉**（position:fixed + display 切换），
 // 0.5.0 起交给**右侧栏 slot 框架**渲染 —— 我们只返回 element，不再自己 createRoot，
@@ -277,7 +277,7 @@ export function ForgePanel(props) {
 					padding: '5px 8px', borderBottom: `1px solid ${color.border1}`, background: color.surface2,
 				},
 			},
-				h('span', { style: { fontWeight: weight.semibold, fontSize: font.small, flex: 'none' } }, '🔨 锻炉 · H5'),
+				h('span', { style: { fontWeight: weight.semibold, fontSize: font.small, flex: 'none' } }, '🔨 造神 · H5'),
 				h('span', {
 					style: {
 						flex: '1 1 auto', minWidth: 0, fontSize: font.caption, color: color.text3,
@@ -321,7 +321,7 @@ export function ForgePanel(props) {
 			h('div', { style: brandMarkStyle }, '🔨'),
 			h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
 				h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm } },
-					h('span', { style: titleStyle }, '锻炉'),
+					h('span', { style: titleStyle }, '造神'),
 					h('span', { style: chip() }, 'v' + (window.__NOVEL_FORGE_VERSION__ || '?')),
 				),
 				h('div', { style: subtitleStyle }, panelSubtitle(s)),
