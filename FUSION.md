@@ -196,3 +196,30 @@ python "$HOME/.dsh/skills/fiction-suite/scripts/check_chapter.py" "06-正文/第
    被自动搬回 forge 路径**——它们仍在 `06-正文/`，需要手工移动或留在 git 分支/提交里。
 3. 建议回滚前先 commit 当前状态，用 `git diff` 看清「配置回滚」与「文件位置」两件事分开处理。
 4. 卸载插件不会删除任何书稿；书目录可整体拷走，用 Obsidian/Git 直接读。
+
+## 9. 本机安装与更新（link 模式）
+
+本机（desktop profile）的安装方式是 **目录链接**：
+
+```text
+C:\Users\xuaol\.dsh\profiles\desktop\package.json
+  "dsh-novel-forge": "link:F:/DSHcache/dsh-novel-forge"
+  dsh.profile.bundles: [..., "dsh-novel-forge"]
+```
+
+因此：
+
+- **改代码**：改本仓库 → 跑测试 → 在 plugin_manager 里把 bundle 禁用再启用（或重启 DSH web，
+  客户端面板必须重启 + 浏览器硬刷新才会重新加载 `lib/client.js`）。
+- **改预设**（`lib/preset/novel-forge/agent.cordis.yml` / `preset.yml`）：必须先
+  `node scripts/build-fusion-patch.mjs` 重新生成 `cordis.patch.yml`，再禁用/启用 bundle；
+  改完不重生成 = 预设还是旧的（`test/fusion-layout.test.mjs` 会报漂移）。
+- **重装**：`plugin_manager action=install_bundle target=F:\DSHcache\dsh-novel-forge`；
+  仓库被移动/删除后 link 会失效，必须重装（或重新 link 后重启）。
+- **首次使用**：新建会话，在预设列表里选「小说锻炉」（Loader 行 `preset-novel-forge`）；
+  旧会话不会自动换成新预设。
+- **验证是否真的生效**：
+  - `plugin_manager list_plugins` 里 `include:dsh-novel-forge` 与 `include:preset-novel-forge`
+    都应为 `fiberPhase: active`；
+  - 会话工具列表里有 23 个 `novel_*` 工具，技能目录里出现 `novel`；
+  - 写一章看落点是不是 `06-正文/第001章 章名.md`。

@@ -297,6 +297,12 @@ npm run audit       # 静态自检：① 调用了但没导入/声明 ② 孤儿
 npm run preview     # 生成可交互 UI 预览 preview/forge-ui.html（内联真产物 + 宿主真 token，离线可开）
 npm test            # node --test 全量用例（纯逻辑单测 + 假 fs 全链路冒烟 + REST 行为测试 + 真校验器输出契约 + headless 行为测试；条数见顶部 tests 徽章）
 node scripts/demo.mjs   # 端到端演示：init→细纲→写章→账本→扫描→提案 全流程
+
+# —— FUSION 改造专用 ——
+npm run build:patch # 由 lib/preset/novel-forge/{agent.cordis.yml,preset.yml} 重新生成 cordis.patch.yml（改预设后必跑）
+npm run fusion:e2e   # 融合链路端到端：fiction-suite 布局落盘 + git 覆盖写 + 布局切换（独立通道，不装宿主也能跑）
+npm run test:stubs   # 挂载 test/stubs/ 的最小宿主 SDK 垫片（Config/defineTool/输出校验器），随后可直跑 node test/<file>.test.mjs
+npm run test:stubs:clean  # 卸载垫片——生产运行时必须保持未挂载（link: 安装时插件自己的 node_modules 优先于宿主解析）
 ```
 
 开发约定（纯逻辑与 io 分离、output.schema 逐字段一致、peerDependencies、客户端源码/产物分离、

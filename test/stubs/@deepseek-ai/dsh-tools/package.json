@@ -1,0 +1,10 @@
+{
+  "name": "@deepseek-ai/dsh-tools",
+  "version": "0.0.0-local-test-stub",
+  "description": "Local test-only minimal shim of the Harness tool SDK (defineTool + validateJsonSchemaValue). node_modules is gitignored; never ships.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

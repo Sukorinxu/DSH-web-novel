@@ -174,6 +174,12 @@ npm test            # node --test test/（纯逻辑单测 + 假 fs 冒烟 + head
 4. **双轨门禁**：写章轨（插件机审/内容门禁/细纲契约，落盘前零 token 拦截）与定稿轨
    （fiction-suite 的 Python 脚本，预设里由 `tool-pwsh` 执行）**并列汇报、不互相换算**。插件内
    不要新增调用 Python/子进程的路径（零依赖、可离线、沙箱内可跑是设计约束）。
-5. **测试**：布局/版本/预设漂移看 `test/fusion-layout.test.mjs`；`node_modules/` 被 gitignore，
-   本地缺宿主 SDK 时可用最小垫片（schemastery + dsh-tools）跑直接 `node test/*.test.mjs`，
-   垫片不入库、不代表宿主真校验器。
+5. **测试**：布局/版本/预设漂移看 `test/fusion-layout.test.mjs`；融合链路端到端看
+   `scripts/fusion-e2e.mjs`（`npm run fusion:e2e`，独立 MCP 装配通道跑真实写章）。
+   本地缺宿主 SDK 时先 `node scripts/setup-test-stubs.mjs` 挂载 `test/stubs/@deepseek-ai/`
+   的最小垫片（schemastery Config + dsh-tools defineTool/校验器），再直接
+   `node test/<file>.test.mjs`（沙箱里 `node --test` 的 child spawn 会被拒）；跑完
+   `node scripts/setup-test-stubs.mjs --remove` 卸载。
+   ⚠️ **垫片绝不能留在插件包的 node_modules 里**：profile 用 `link:` 引用本仓库时，插件自己的
+   node_modules 优先于宿主解析，留着垫片等于用替身跑真机（安装后会看到 `include:dsh-novel-forge`）。
+   垫片源码在 `test/stubs/` 入库（package.json 的 `files` 不含 test/，不进发行面），node_modules 被 gitignore。

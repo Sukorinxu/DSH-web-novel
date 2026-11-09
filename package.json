@@ -61,10 +61,14 @@
   },
   "scripts": {
     "build": "node scripts/build-client.mjs",
+    "build:patch": "node scripts/build-fusion-patch.mjs",
     "audit": "node scripts/audit-static.mjs && node scripts/audit-lib-calls.mjs",
     "preview": "npm run build && node scripts/preview-ui.mjs",
     "pretest": "npm run build && npm run audit",
     "test": "node --test test/*.test.mjs",
+    "test:stubs": "node scripts/setup-test-stubs.mjs",
+    "test:stubs:clean": "node scripts/setup-test-stubs.mjs --remove",
+    "fusion:e2e": "node scripts/fusion-e2e.mjs",
     "setup-dev": "node scripts/setup-dev-links.mjs",
     "realboot": "node scripts/real-boot-test.mjs"
   },
