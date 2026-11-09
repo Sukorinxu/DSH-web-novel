@@ -73,6 +73,12 @@ export function initialState() {
 		// 宽屏阅读/编辑浮层（FUSION 1.7）：{ no, title, text, loading, editing, draft, saving, error } | null
 		// 右栏窄，长章阅读/改稿走宿主页面宽度的浮层；读与写是同一份数据（读态 → 点「编辑」）。
 		readerOverlay: null,
+		// H5 网页版浮层（1.8）：{ book, key } | null —— iframe 载 /api/novel-forge/h5，
+		// H5 页面是零依赖单文件（lib/h5-page.js），数据和 React 面板走同一套 REST 门禁。
+		// key 变化 = 强制刷新 iframe（重载按钮换 key，避免直接操作 iframe DOM）。
+		h5Overlay: null,
+		// 设置页（本书设置：字数区间 / 平台 / logline）：保存中 / 成功提示 / 服务端错误原文
+		settingsSaving: false, settingsOk: '', settingsError: '',
 		// 双轨状态卡（FUSION 1.7）：GET /projects/:id/fusion —— 布局/版本策略/.git/进度。
 		// 打不开时置 error 但绝不阻塞面板其它区域（状态卡只是信息）。
 		fusionStatus: null, fusionLoading: false, fusionError: '',

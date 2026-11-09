@@ -2005,7 +2005,19 @@ test('★ 动作契约对账：视图发出的每个 data-action 控制器都有
         ['ChapterListView(空目录)', () => I.ChapterListView({ state: { ...sink, chapterList: [], reader: null } })],
         ['ProjectOverviewView', () => I.ProjectOverviewView({ state: sink })],
         ['LorebookView', () => I.LorebookView({ state: sink })],
-        ['SettingsView', () => I.SettingsView()],
+        ['SettingsView', () => I.SettingsView({
+            state: {
+                ...sink,
+                settingsSaving: false, settingsOk: '', settingsError: '',
+                detail: {
+                    charView: { charMin: 2000, charMax: 4000, charSource: 'config' },
+                    fusion: { layout: 'fiction-suite', versioning: 'git', hasGit: true },
+                    meta: { logline: '一句立意' },
+                },
+            },
+        })],
+        // H5 网页版浮层（1.8）：iframe 壳的刷新/关闭动作也要进动作契约对账
+        ['H5Overlay', () => I.H5Overlay({ state: { ...sink, sessionId: 's1', h5Overlay: { book: '书A', key: 1 } } })],
     ];
 
     const actions = new Set();

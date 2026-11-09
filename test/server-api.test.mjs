@@ -67,6 +67,11 @@ const ROUTES = [
     { name: 'DELETE /projects/:id', method: 'DELETE', url: `${PREFIX}/projects/护栏本` },
     { name: 'POST /projects/:id/rename', method: 'POST', url: `${PREFIX}/projects/护栏本/rename` },
     { name: 'POST /projects/:id/chars', method: 'POST', url: `${PREFIX}/projects/护栏本/chars` },
+    // 1.8：本书设置（字数/平台/立意）+ H5 面板外壳。
+    // H5 外壳是静态 HTML、iframe 导航带不了自定义头 → 唯一豁免 fence 的 GET（数据仍要 fence）；
+    // 所以它在 fence 全覆盖用例里显式跳过，另有独立用例断言「壳 200、数据 403」。
+    { name: 'POST /projects/:id/settings（本书设置）', method: 'POST', url: `${PREFIX}/projects/护栏本/settings` },
+    { name: 'GET /h5（H5 面板外壳，豁免 fence）', method: 'GET', url: `${PREFIX}/h5`, fenceExempt: true },
     { name: 'POST /projects/:id/clone', method: 'POST', url: `${PREFIX}/projects/护栏本/clone` },
     { name: 'GET /worldbook/:bookId', method: 'GET', url: `${PREFIX}/worldbook/护栏本` },
     { name: 'POST /worldbook/:bookId', method: 'POST', url: `${PREFIX}/worldbook/护栏本` },
@@ -1038,13 +1043,51 @@ test('R1-00 路由清单与源码计数同步（清单烂掉即红）', () => {
     assert.equal(trustedChecks.length, 1, 'fence 检查必须恰好一份（server-api.js 派发层）');
 });
 
+// 1.8 本书设置：chars / platform / logline 一次提交（三个可选字段、任一不合法整单拒绝）。
+test('R1+ 本书设置端点：三字段一次提交 / 非法平台 400 / 空串清除 / 空请求 400', async () => {
+    await createBook('设置本');
+    const ok = await drive({ method: 'POST', url: `${PREFIX}/projects/设置本/settings`, body: { chars: '2500-3500', platform: 'fanqie', logline: '一句立意' } });
+    assert.equal(ok.statusCode, 200, `设置应 200，实际 ${ok.statusCode}：${ok.body}`);
+    assert.equal(ok.json.value.charMin, 2500);
+    assert.equal(ok.json.value.charMax, 3500);
+    assert.equal(ok.json.value.platform, 'fanqie');
+    assert.equal(ok.json.value.logline, '一句立意');
+    const detail = await drive({ method: 'GET', url: `${PREFIX}/projects/设置本` });
+    assert.equal(detail.statusCode, 200, `详情应 200，实际 ${detail.statusCode}：${detail.body}`);
+    assert.equal(detail.json.value.logline, '一句立意', '详情顶层 logline 应同步');
+    assert.equal(detail.json.value.fusion.platform, 'fanqie', '详情 fusion.platform 应同步');
+    const bad = await drive({ method: 'POST', url: `${PREFIX}/projects/设置本/settings`, body: { platform: 'youtube' } });
+    assert.equal(bad.statusCode, 400, `非法平台应 400，实际 ${bad.statusCode}：${bad.body}`);
+    assert.equal(bad.json.error?.code, 'INVALID_FIELD');
+    const none = await drive({ method: 'POST', url: `${PREFIX}/projects/设置本/settings`, body: {} });
+    assert.equal(none.statusCode, 400, '一个字段都不给应 400（禁止静默无操作）');
+    const cleared = await drive({ method: 'POST', url: `${PREFIX}/projects/设置本/settings`, body: { chars: '', platform: '', logline: '' } });
+    assert.equal(cleared.statusCode, 200, `清除应 200，实际 ${cleared.statusCode}：${cleared.body}`);
+    assert.equal(cleared.json.value.platform, '');
+    assert.equal(cleared.json.value.logline, '');
+    const after = await drive({ method: 'GET', url: `${PREFIX}/projects/设置本` });
+    assert.equal(after.json.value.logline ?? '', '', 'logline 清除后详情应为空');
+});
+
 test('R1 fence 全覆盖：清单内路由逐个不带 fence 头 → 403 FORBIDDEN', async () => {
     for (const r of ROUTES) {
+        if (r.fenceExempt) continue; // /h5 静态外壳是唯一豁免（数据面不豁免）
         const res = await drive({ method: r.method, url: r.url, fence: false, body: {} });
         assert.equal(res.statusCode, 403, `${r.name}：缺 fence 必须 403，实际 ${res.statusCode}`);
         assert.equal(res.json.error?.code, 'FORBIDDEN', `${r.name}：错误码应为 FORBIDDEN，实际 ${JSON.stringify(res.json)}`);
         assert.equal(res.json.ok, false);
     }
+});
+
+// 1.8 H5 安全边界：外壳可匿名加载（iframe 导航带不了 fence），但它只吐静态 HTML；
+// 数据面（/projects 等）不带 fence 仍必须 403——两道门不能合并成一道。
+test('R1+ H5 外壳免 fence 但数据面不豁免', async () => {
+    const shell = await drive({ method: 'GET', url: `${PREFIX}/h5`, fence: false });
+    assert.equal(shell.statusCode, 200, `H5 外壳应 200，实际 ${shell.statusCode}：${shell.body.slice(0, 200)}`);
+    assert.match(String(shell.headers['content-type'] ?? ''), /text\/html/, 'H5 外壳必须是 text/html');
+    assert.ok(String(shell.body).includes('<!doctype html>') || String(shell.body).includes('<!DOCTYPE html>'), 'H5 外壳应是完整 HTML 文档');
+    const data = await drive({ method: 'GET', url: `${PREFIX}/projects`, fence: false });
+    assert.equal(data.statusCode, 403, '数据面不带 fence 必须仍 403');
 });
 
 // 拆分回归（04e377a）：polish/proofread 分支曾 `return runChapterRevision(...)`——

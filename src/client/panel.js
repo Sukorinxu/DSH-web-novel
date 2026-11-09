@@ -27,6 +27,7 @@ import { ProjectListView } from './views/project-list.js';
 import { ProjectDetailView } from './views/project-detail.js';
 import { LorebookView } from './views/lorebook.js';
 import { SettingsView } from './views/settings.js';
+import { H5Overlay } from './views/h5-overlay.js';
 // 面板根属性 + 交互态样式表（:hover/:active 只能靠样式表，内联压不过它们）
 import { PANEL_ATTR, ensureStyles } from './css.js';
 // 业务域子控制器：各自只依赖共享 ctx（state/notify/seq/player + 晚绑定的跨域动作）
@@ -185,7 +186,7 @@ function panelSubtitle(s) {
 		return n > 0 ? `${title} · 已写 ${n} 章` : title;
 	}
 	if (s.view === 'lorebook') return `${s.selected || '默认'} · 世界书`;
-	if (s.view === 'settings') return '能力清单';
+	if (s.view === 'settings') return '设置 · 本书 / H5';
 	const total = (s.projects ?? []).length;
 	if (s.loading && total === 0) return '载入中…';
 	const unclaimed = (s.unclaimed ?? []).length;
@@ -262,6 +263,17 @@ export function ForgePanel(props) {
 				: h('span', {
 					style: { ...chip({ tone: 'neutral' }), alignSelf: 'flex-start' },
 				}, '全部项目'),
+			// H5 网页版入口：常驻头部 —— 面板卡顿时用户要能一键切到 H5 版（iframe 内独立渲染）
+			h('button', {
+				'data-action': 'h5-open',
+				'data-nf-btn': '1', 'data-variant': 'secondary',
+				title: 'H5 网页版（移动优先阅读/工作台，独立渲染不拖面板）',
+				'aria-label': '打开 H5 网页版',
+				style: {
+					flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px',
+					lineHeight: 1, padding: '5px 8px', borderRadius: '8px',
+				},
+			}, 'H5'),
 			// 设置入口常驻在头部：详情页/世界书页都够不到列表页那个按钮，
 			// 用户想看一眼「面板到底能做什么」时不该先退回列表
 			h('button', {
@@ -280,8 +292,10 @@ export function ForgePanel(props) {
 			s.view === 'projects' ? h(ProjectListView, { state: s }) : null,
 			s.view === 'detail' ? h(ProjectDetailView, { state: s }) : null,
 			s.view === 'lorebook' ? h(LorebookView, { state: s }) : null,
-			s.view === 'settings' ? h(SettingsView) : null,
+			s.view === 'settings' ? h(SettingsView, { state: s }) : null,
 		),
+		// H5 浮层挂在面板根节点里（与宽屏阅读浮层同级）：iframe 独立渲染、独立滚动。
+		h(H5Overlay, { state: s }),
 	);
 
 	return ForgeBoundary ? h(ForgeBoundary, null, view) : view;

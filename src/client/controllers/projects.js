@@ -258,6 +258,46 @@ export function createProjectsController(ctx) {
 	const charsSourceText = (source) => (source === 'custom' ? '本书自定义'
 		: source === 'platform' ? '投放平台口径' : '插件默认');
 
+	/**
+	 * 本书设置（1.8）：字数区间 / 投放平台 / logline 一次提交。
+	 * 服务端 POST /projects/:id/settings 三字段都可选、只传要改的；任一项不合法整单拒绝。
+	 * chars 的 undefined / '' 语义与 saveBookChars 同一纪律：undefined=不动，''=清除。
+	 */
+	const saveBookSettings = async ({ chars, platform, logline } = {}) => {
+		const bookId = state.selected;
+		if (!bookId) { state.settingsError = '先打开一本书再改设置'; notify(); return; }
+		const body = {};
+		if (chars !== undefined) body.chars = chars;
+		if (platform !== undefined) body.platform = platform;
+		if (logline !== undefined) body.logline = logline;
+		state.settingsSaving = true; state.settingsError = ''; state.settingsOk = ''; notify();
+		try {
+			const value = await apiFetch(`/projects/${encodeURIComponent(bookId)}/settings`, {
+				method: 'POST',
+				body: JSON.stringify(body),
+			});
+			// 设置页与概览共用 state.detail：回包是服务端算好的真值，直接刷新对应字段
+			if (state.detail) {
+				state.detail = {
+					...state.detail,
+					logline: value.logline ?? '',
+					charView: {
+						charMin: value.charMin, charMax: value.charMax, charSource: value.charSource,
+						...(value.charLimits ? { charLimits: value.charLimits } : {}),
+					},
+					fusion: { ...(state.detail.fusion ?? {}), platform: value.platform ?? '', platformName: value.platformName ?? '' },
+				};
+			}
+			// 概览页的字数卡也吃这份 state（保存后返回详情不再显示旧值）
+			state.charsValue = value.charLimits ?? '';
+			state.settingsOk = '已保存 ✓';
+		} catch (error) {
+			state.settingsError = String(error?.message ?? error);
+		} finally {
+			state.settingsSaving = false; notify();
+		}
+	};
+
 	const deleteProject = async () => {
 		if (!state.selected) return;
 		state.deleteState = 'busy'; notify();
@@ -546,6 +586,6 @@ export function createProjectsController(ctx) {
 	return {
 		loadElements, loadChapterList, refreshProjects, claimProject, renameProject, cloneProject,
 		deleteListProject, openProject, createProject, deleteProject, goBack, rotateSession, createSession,
-		loadContinuity, loadDiagnosis, loadDashboard, runRevision, writeSingleChapter, runBatch, saveBookChars,
+		loadContinuity, loadDiagnosis, loadDashboard, runRevision, writeSingleChapter, runBatch, saveBookChars, saveBookSettings,
 	};
 }

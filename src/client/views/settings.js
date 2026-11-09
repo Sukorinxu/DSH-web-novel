@@ -1,15 +1,29 @@
-// src/client/views/settings.js — 设置视图。
+// src/client/views/settings.js — 设置页（1.8）：本书设置可改 + H5 网页版入口 + 能力清单。
 //
-// 只读的「能力清单」：让用户在 UI 里确认插件到底装了什么、哪些事面板能自己做、
-// 哪些必须回到会话里做。写操作（开关 / 数据目录）预留给后续的 /settings 端点。
-//
-// 为什么值得写细：这份清单直接影响「遇到事该去哪」——把面板做不了的事写清楚，
-// 用户就不会对着一个点了没反应的按钮发呆（0.12 之前好几次都是这么卡住的）。
+// 为什么重写：旧页只是**只读**「能力清单」，用户问「能不能在面板里改设置」时答案是「不能」。
+// 现在两件事都能在这里做：
+//   ① 本书设置（每章字数区间 / 投放平台 / 一句话立意）→ POST /projects/:id/settings
+//      （与工具面 novel_project chars/platform、以及 H5 设置页同一个端点，一份真相）；
+//   ② H5 网页版（阅读/工作台）入口 —— 面板卡顿时换独立渲染的 H5 页面。
+// 注意：布局（forge/fiction-suite）与版本策略是**进程级插件配置**，改了要重启宿主，
+// 这里只读展示、不给假开关。
 import { h } from '../react.js';
-import { color, space, font, weight, footerStyle, stackStyle } from '../styles.js';
-import { Card, Btn, Chip, KV, Section } from '../ui.js';
+import {
+	color, space, font, weight, footerStyle, stackStyle, hintStyle, errStyle, okStyle, inputStyle,
+} from '../styles.js';
+import { Card, Btn, Chip, KV, Section, Feedback } from '../ui.js';
 
-/** 能力行：左侧打勾/点，右侧一句人话。 */
+/** 平台选项：与 lib/store.js 的 PLATFORM_IDS 对齐（空串=未设置）。 */
+const PLATFORMS = [
+	{ id: '', name: '未设置（回落插件默认 2000–4000）' },
+	{ id: 'qidian', name: '起点（2000–4000）' },
+	{ id: 'fanqie', name: '番茄（1500–3000，建议落点 2800–2990）' },
+	{ id: 'jjwxc', name: '晋江（3000–6000）' },
+	{ id: 'qimao', name: '七猫（2000–3500）' },
+	{ id: 'feilu', name: '飞卢（1500–5050）' },
+];
+
+/** 能力行：左侧打勾/点，右侧一句话人话。 */
 function cap(can, text) {
 	return h('div', { style: { display: 'flex', gap: space.sm, alignItems: 'flex-start', fontSize: font.small } },
 		h('span', { style: { flex: 'none', color: can ? color.ok : color.textDim, width: '12px' } }, can ? '✓' : '·'),
@@ -17,7 +31,20 @@ function cap(can, text) {
 	);
 }
 
-export function SettingsView() {
+function fieldLabel(text, hint) {
+	return h('div', { style: { display: 'flex', alignItems: 'baseline', gap: space.sm } },
+		h('span', { style: { fontSize: font.small, fontWeight: weight.semibold, color: color.text2 } }, text),
+		hint ? h('span', { style: { ...hintStyle, fontSize: font.caption } }, hint) : null,
+	);
+}
+
+export function SettingsView({ state: s = {} } = {}) {
+	const bookId = s.selected ?? '';
+	const hasBook = bookId !== '';
+	const charView = s.detail?.charView;
+	const fusion = s.detail?.fusion;
+	const saving = s.settingsSaving === true;
+
 	return h('div', { style: stackStyle(space.lg) },
 
 		h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm } },
@@ -27,43 +54,108 @@ export function SettingsView() {
 			Chip({}, 'v' + (window.__NOVEL_FORGE_VERSION__ || '?')),
 		),
 
-		// ── 注册了什么 ──
+		// ── 本书设置（可改） ─────────────────────────────────────────────
 		Card({ tone: 'plain' },
-			Section({ icon: '🧩', title: '已装配' },
+			Section({ icon: '📖', title: hasBook ? `本书设置 · ${bookId}` : '本书设置' },
+				hasBook
+					? h('div', { style: stackStyle(space.md) },
+						// 字数区间：空串=清除自定义，回落平台/插件口径；服务端一次性校验
+						h('div', { style: stackStyle(space.xs) },
+							fieldLabel('每章字数区间', `生效 ${charView?.charMin ?? '?'}–${charView?.charMax ?? '?'}（${charView?.charSource === 'custom' ? '本书自定义' : charView?.charSource === 'platform' ? '平台口径' : '插件默认'}）`),
+							h('input', {
+								'data-field': 'settings-chars',
+								type: 'text',
+								defaultValue: charView?.charLimits ?? '',
+								placeholder: '如 2500-3500；留空=清除自定义',
+								style: { ...inputStyle, width: '100%', boxSizing: 'border-box' },
+							}),
+							h('div', { style: { ...hintStyle, fontSize: font.caption } },
+								'改这里等于改写章门禁/简报/细纲/审计的字数口径；番茄建议 2800–2990，别贴顶线。'),
+						),
+						// 平台：决定默认字数口径与机审口味
+						h('div', { style: stackStyle(space.xs) },
+							fieldLabel('投放平台', fusion?.platformName ? `当前：${fusion.platformName}` : '未设置'),
+							h('select', {
+								'data-field': 'settings-platform',
+								defaultValue: fusion?.platform ?? '',
+								style: { ...inputStyle, width: '100%', boxSizing: 'border-box', padding: '5px 6px' },
+							}, PLATFORMS.map((p) => h('option', { key: p.id, value: p.id }, p.name))),
+						),
+						// 一句话立意：写前简报与黄金三章诊断都会用
+						h('div', { style: stackStyle(space.xs) },
+							fieldLabel('一句话立意', '进简报与诊断，≤120 字'),
+							h('textarea', {
+								'data-field': 'settings-logline',
+								defaultValue: s.detail?.logline ?? '',
+								rows: 3,
+								maxLength: 120,
+								placeholder: '例：穿越群演靠平行宇宙顶流群拿能力，一路写歌、拿权柄、拍出第一部长片。',
+								style: { ...inputStyle, width: '100%', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.7 },
+							}),
+						),
+						h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' } },
+							Btn({ variant: 'primary', size: 'sm', action: 'settings-save', disabled: saving }, saving ? '保存中…' : '保存本书设置'),
+							Btn({ variant: 'ghost', size: 'sm', action: 'h5-open' }, '在 H5 里改'),
+							s.settingsOk ? h('span', { style: okStyle }, s.settingsOk) : null,
+						),
+						s.settingsError ? Feedback({ tone: 'err' }, s.settingsError) : null,
+						h('div', { style: { ...hintStyle, fontSize: font.caption } },
+							'布局 / 版本策略是进程级插件配置（forge|fiction-suite、versions|git），改它需要编辑 profile 配置并重启 DSH web——这里只读展示，不给假开关。'),
+					)
+					: h('div', { style: stackStyle(space.sm) },
+						h('div', { style: hintStyle }, '当前没有选中书。先在「书目」里打开一本，再回来改它的字数/平台/立意。'),
+						Btn({ variant: 'secondary', size: 'sm', action: 'back-from-settings' }, '去书目'),
+					),
+			),
+		),
+
+		// ── H5 网页版（独立渲染，卡顿时的退路） ──────────────────────────
+		Card({ tone: 'plain' },
+			Section({ icon: '📱', title: 'H5 网页版' },
 				h('div', { style: stackStyle(space.sm) },
-					// ⚠️ 不写死工具数：注册数随版本变（0.13.x 已从 17 涨到 20+），
-					// 数字一落字就是下一版必过期的漂移炸弹（common.js 注释同款教训）。
-					KV({ k: 'tools' }, '全部 novel_* 工具已注册'),
-					KV({ k: '通道' }, '宿主工具面 + MCP 双通道'),
-					KV({ k: '硬约束' }, '账本 / 门禁 / 机审 / 提案制 —— 判定权在代码，不在模型'),
-					KV({ k: '旁路引擎' }, '润色 / 校对 / 打标 / 起草 四通道（不占主对话、不写会话记录）'),
-					KV({ k: '检索' }, 'node:sqlite + FTS5 + 中文二元切分（无 embedding，纯本地）'),
+					h('div', { style: { ...hintStyle, lineHeight: 1.7 } },
+						'整体按 H5 网页设计：移动优先、纸/护眼/夜三主题、宋体 18px/2.0、段首缩进两端对齐；',
+						'工作台 / 目录 / 阅读 / 设置四块。它跑在 iframe 里，样式与滚动和面板 React 树隔离——',
+						'长列表卡顿时是更轻的退路。数据仍走同一套 REST + fence 门禁，不是第二份真相。'),
+					h('div', { style: { display: 'flex', gap: space.sm, flexWrap: 'wrap' } },
+						Btn({ variant: 'accent', size: 'sm', action: 'h5-open' }, '打开 H5 网页版'),
+						hasBook ? Btn({ variant: 'secondary', size: 'sm', action: 'h5-open' }, `H5 阅读《${String(bookId).slice(0, 12)}》`) : null,
+					),
 				),
 			),
 		),
 
-		// ── 面板能做什么 / 不能做什么 ──
+		// ── 已装配 / 能力边界 ────────────────────────────────────────────
 		Card({ tone: 'plain' },
-			Section({ icon: '🖱', title: '这个面板能直接做' },
+			Section({ icon: '🧩', title: '已装配' },
+				h('div', { style: stackStyle(space.sm) },
+					KV({ k: 'tools' }, '全部 novel_* 工具已注册'),
+					KV({ k: '通道' }, '宿主工具面 + MCP 双通道 + REST 数据面（面板/H5 共用）'),
+					KV({ k: '硬约束' }, '账本 / 门禁 / 机审 / 提案制——判定权在代码，不在模型'),
+					KV({ k: '旁路引擎' }, '润色 / 校对 / 打标 / 起草四通道（不占主对话、不写会话记录）'),
+					KV({ k: '检索' }, 'node:sqlite + FTS5 + 中文二元切分（纯本地）'),
+				),
+			),
+		),
+		Card({ tone: 'plain' },
+			Section({ icon: '🛠', title: '这个面板能直接做' },
 				h('div', { style: stackStyle(space.xs) },
 					cap(true, '读章、改稿、存稿、导出、删除、改名、认领旧书'),
-					cap(true, '一键润色 / 校对 —— 走旁路引擎，产物是提案，你点「应用」才生效'),
+					cap(true, '一键润色 / 校对 —— 走旁路引擎，产物是提案，点「应用」才生效'),
 					cap(true, '批量起草 —— 并发生成、串行提交，每章照样过全部门禁'),
 					cap(true, '全书体检 —— 死人复活 / 账本矛盾 / 伏笔超期 / 章号断档（零 token）'),
 					cap(true, '批准或丢弃模型提的修订；管理世界书；章节朗读连播'),
-					cap(true, '克隆为模板 —— 一键把老书连章节、大纲、人物、世界书、账本、伏笔复制成新书'),
+					cap(true, '克隆为模板；改本书字数区间 / 平台 / 一句话立意'),
+					cap(true, 'H5 网页版阅读与工作台（独立渲染）'),
 				),
-			),
-			h('div', { style: { marginTop: space.lg } },
-				Section({ icon: '💬', title: '只能回会话里做' },
-					h('div', { style: stackStyle(space.xs) },
-						// M16 修复：本清单说「写章 / 结构诊断面板做不了」早就不成立——
-						// 面板有「写单章」（走批量端点，同一门禁链）和「结构诊断」按钮（纯词表打分，零 token）
-						cap(false, '写章（novel_write_chapter）—— 面板「写单章」可落盘单章；拼全书上下文包的完整写作流仍在会话'),
-						cap(false, '去AI味评级 / 平台审稿 / 润色分析 —— 重活仍在会话工具'),
-						cap(false, '生成大纲、角色卡、细纲、设定（novel_outline / novel_cast / novel_world）'),
-						cap(false, '导入既有文稿（novel_import）'),
-						cap(false, '书库「饲料」—— 喂外部小说、对比结构画像（novel_library：import / list / compare）'),
+				h('div', { style: { marginTop: space.lg } },
+					Section({ icon: '💬', title: '只能回会话里做' },
+						h('div', { style: stackStyle(space.xs) },
+							cap(false, '写章（novel_write_chapter）——面板「写单章」可落盘单章；拼全书上下文的完整写作流仍在会话'),
+							cap(false, '去AI味评分 / 平台审稿 / 润色分析 —— 重蒸馏仍在会话工具'),
+							cap(false, '生成大纲、角色卡、细纲、设定（novel_outline / character / worldbook 的生成侧）'),
+							cap(false, '导入既有文稿（novel_import）、书库「饲料」对标分析（novel_library）'),
+						),
 					),
 				),
 			),

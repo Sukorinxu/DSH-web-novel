@@ -244,7 +244,30 @@ export function createEventsController(ctx) {
 				await ctx.loadLoreEntries(state.selected || 'default'); break;
 			case 'back-from-lore':
 			case 'back-from-settings': state.view = state.selected ? 'detail' : 'projects'; notify(); break;
-			case 'goto-settings': state.view = 'settings'; notify(); break;
+			case 'goto-settings': state.view = 'settings'; state.settingsOk = ''; state.settingsError = ''; notify(); break;
+	// H5 网页版浮层（1.8）：iframe 独立渲染，开/关/刷新都只动 state.h5Overlay
+	case 'h5-open': state.h5Overlay = { book: state.selected || null, key: Date.now() }; notify(); break;
+	case 'h5-close': state.h5Overlay = null; notify(); break;
+	case 'h5-reload':
+		if (state.h5Overlay) {
+			state.h5Overlay = { ...state.h5Overlay, key: Date.now() };
+			notify();
+		}
+		break;
+	// 设置页保存：本书字数区间 / 平台 / logline 一次提交（服务端单端点、任一不合法整单拒绝）
+	case 'settings-save': {
+		if (!state.selected) { state.settingsError = '先打开一本书再改设置'; notify(); break; }
+		const read = (name) => {
+			const node = bound?.querySelector?.(`[data-field="${name}"]`);
+			return node ? String(node.value ?? '') : '';
+		};
+		await ctx.saveBookSettings({
+			chars: read('settings-chars').trim(),
+			platform: read('settings-platform').trim(),
+			logline: read('settings-logline').trim(),
+		});
+		break;
+	}
 			case 'write': await ctx.writeSingleChapter(); break;
 			case 'polish': await ctx.runRevision('polish'); break;
 			case 'proofread': await ctx.runRevision('proofread'); break;
@@ -408,9 +431,16 @@ export function createEventsController(ctx) {
 		else if (field === 'batch-concurrency') state.batchConcurrency = e.target.value;
 		else if (field === 'batch-force') state.batchForce = e.target.checked === true;
 	};
-	/** 宽屏浮层：Esc 关闭（读/编同一出口）。 */
+	/** 浮层 Escape：H5 优先（最上层），其次宽屏阅读/编辑浮层。 */
 	const onKeyDown = (e) => {
-		if (e?.key === 'Escape' && state.readerOverlay) {
+		if (e?.key !== 'Escape') return;
+		if (state.h5Overlay) {
+			e.preventDefault?.();
+			state.h5Overlay = null;
+			notify();
+			return;
+		}
+		if (state.readerOverlay) {
 			e.preventDefault?.();
 			state.readerOverlay = null;
 			notify();
@@ -433,6 +463,7 @@ export function createEventsController(ctx) {
 			bound.removeEventListener('click', onClick);
 			bound.removeEventListener('input', onInput);
 			bound.removeEventListener('change', onChangeEvent);
+			bound.removeEventListener('keydown', onKeyDown);
 			bound.removeEventListener('keydown', onKeyDown);
 		} catch { /* 节点已被框架拆掉 */ }
 		bound = null;

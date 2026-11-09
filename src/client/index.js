@@ -28,10 +28,11 @@ import { LorebookView } from './views/lorebook.js';
 import { ProjectDetailView } from './views/project-detail.js';
 import { ProjectOverviewView } from './views/overview.js';
 import { SettingsView } from './views/settings.js';
+import { H5Overlay } from './views/h5-overlay.js';
 
 // 版本号：必须与 package.json 的 version 一致。
 // build-client.mjs 会把它与 package.json 对账，不一致直接构建失败（防发行漂移）。
-const PLUGIN_VERSION = '1.7.0';
+const PLUGIN_VERSION = '1.8.0';
 
 // 供视图头部徽标读取 —— 让视图层不必反向 import 入口（避免循环依赖）。
 window.__NOVEL_FORGE_VERSION__ = PLUGIN_VERSION;
@@ -148,5 +149,5 @@ export const __internals = {
 	// 世界书视图：测试要拿它真实渲染出的 data-id（字符串 id 'W1'）驱动控制器
 	LorebookView,
 	// 其余视图导出：动作契约对账用例要渲染它们、收集真实 data-action（视图↔控制器一致性）
-	ProjectDetailView, ProjectOverviewView, SettingsView,
+	ProjectDetailView, ProjectOverviewView, SettingsView, H5Overlay,
 };
