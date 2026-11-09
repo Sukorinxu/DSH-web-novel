@@ -248,23 +248,10 @@ export function ForgePanel(props) {
 		};
 	}, []);
 
-	// H5 页内「经典面板」按钮走 postMessage（iframe 内不能直接改宿主 state）。
-	useEffect(() => {
-		const onMessage = (e) => {
-			if (e?.data?.type !== 'nf-h5-classic') return;
-			controller.state.panelMode = 'react';
-			try { localStorage.setItem('nf-panel-mode', 'react'); } catch { /* 忽略 */ }
-			forceTick((n) => n + 1);
-		};
-		window.addEventListener('message', onMessage);
-		return () => window.removeEventListener('message', onMessage);
-	}, []);
-
 	const s = controller.state;
 
-	// 默认形态：右侧栏整块渲染 H5 网页版（独立渲染、PC 宽屏优先）。经典 React 面板是
-	// 手动入口（顶部条「经典面板」或设置页按钮）；选择存 localStorage。
-	if (s.panelMode !== 'react') {
+	// 经典 React 面板已下线：右侧栏始终渲染 H5（用户 2026-11-10 定：入口全部删掉，默认 H5）。
+	{
 		return h('div', {
 			[PANEL_ATTR]: '1',
 			ref: nodeRef,
@@ -284,12 +271,6 @@ export function ForgePanel(props) {
 						overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 					},
 				}, s.detail?.title || s.selected || '作品详情'),
-				h('button', {
-					'data-action': 'panel-mode-react',
-					'data-nf-btn': '1', 'data-variant': 'secondary',
-					title: '切到经典 React 面板（手动入口）',
-					style: { flex: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', lineHeight: 1, padding: '4px 7px', borderRadius: '6px' },
-				}, '经典面板'),
 				h('button', {
 					'data-action': 'h5-refresh',
 					'data-nf-btn': '1', 'data-variant': 'secondary',

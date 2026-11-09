@@ -247,10 +247,9 @@ export function createEventsController(ctx) {
 			case 'goto-settings': state.view = 'settings'; state.settingsOk = ''; state.settingsError = ''; notify(); break;
 	// H5 网页版浮层（1.8）：iframe 独立渲染，开/关/刷新都只动 state.h5Overlay
 	case 'h5-open': state.panelMode = 'h5'; persistPanelMode('h5'); notify(); break;
-	// 面板形态切换（1.9）：H5 默认；经典面板是手动入口。localStorage 记住用户选择。
-	case 'panel-mode-h5': state.panelMode = 'h5'; persistPanelMode('h5'); notify(); break;
-	case 'panel-mode-react': state.panelMode = 'react'; persistPanelMode('react'); notify(); break;
 	case 'h5-refresh': state.h5RefreshKey = (state.h5RefreshKey ?? 0) + 1; notify(); break;
+	// H5 已是唯一形态：经典面板里遗留的「打开 H5」按钮等价于刷新 H5 内嵌页。
+	case 'panel-mode-h5': state.h5RefreshKey = (state.h5RefreshKey ?? 0) + 1; notify(); break;
 	case 'h5-close': state.h5Overlay = null; notify(); break;
 	case 'h5-reload':
 		if (state.h5Overlay) {
