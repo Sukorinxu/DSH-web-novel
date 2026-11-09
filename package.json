@@ -85,6 +85,6 @@
     "dsh-novel-forge-mcp": "./mcp/server.mjs"
   },
   "devDependencies": {
-    "esbuild": "^0.28.2"
+    "esbuild": "0.25.0"
   }
 }
