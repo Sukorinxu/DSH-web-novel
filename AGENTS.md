@@ -39,6 +39,9 @@ DSH（DeepSeek Harness）小说创作插件。设计主线：**代码强制 > �
    标记，测试会检查它）。dsh **只加载产物**，改源码不构建等于没改。
    流程：`npm run build` → 重启 DSH web（bundle 在进程启动时快照）→ 浏览器硬刷新。
    构建脚本会校验源码 `PLUGIN_VERSION` 与 package.json 一致，不一致直接失败（防发行漂移）。
+   离线/装不上 esbuild 时 `npm run build` **自动降级**到 `scripts/build-client-fallback.mjs`
+   （零依赖最小 ESM→CJS 转译器，产物契约与 esbuild 版一致：generated 头、ModuleLoader 外壳、
+   CJS 导出表；只是不做 tree-shaking，体积大些）。两条构建器产物都**禁止手改**。
 8. **浏览器半只能向宿主模块表取包**（`react` / `react/jsx-runtime` / `react-dom` /
    `react-dom/client` / `cordis`），统一经 `src/client/react.js` 出口。
    ⚠️ **`createRoot` 只在 `react-dom/client` 里，`react` 核心包没有** —— 0.4.x 自建 root 时

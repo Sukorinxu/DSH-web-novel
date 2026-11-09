@@ -61,6 +61,7 @@ export function ChapterListView({ state: s }) {
 			h('span', {
 				style: { flex: '1 1 auto', minWidth: 0, fontWeight: weight.semibold, fontSize: font.small },
 			}, `📖 第 ${s.reader.no} 章 · ${s.reader.title}`),
+			Btn({ variant: 'secondary', size: 'sm', action: 'reader-wide', id: s.reader.no, title: `宽屏阅读第 ${s.reader.no} 章`, ariaLabel: `宽屏阅读第 ${s.reader.no} 章` }, '⤢ 宽屏'),
 			Btn({ variant: 'secondary', size: 'sm', action: 'play-from', id: s.reader.no, title: `从第 ${s.reader.no} 章开始听` }, '▶ 朗读本章'),
 			Btn({ variant: 'ghost', size: 'sm', action: 'close-reader', title: '收起阅读器', ariaLabel: '收起阅读器' }, '✕'),
 		),
@@ -68,7 +69,8 @@ export function ChapterListView({ state: s }) {
 			style: {
 				marginTop: space.sm,
 				maxHeight: '420px', overflowY: 'auto',
-				fontSize: font.small, lineHeight: 1.85,
+				// 阅读卡是窄栏里的长文：字号按读稿调（12px 太小），行距放宽
+				fontSize: font.lead, lineHeight: 1.95, letterSpacing: '.2px',
 				whiteSpace: 'pre-wrap', color: color.text,
 			},
 		}, s.reader.loading ? '正文加载中…' : (s.reader.text || '（本章正文为空）')),
@@ -107,6 +109,7 @@ export function ChapterListView({ state: s }) {
 			c.version > 1 ? Chip({}, `v${c.version}`) : null,
 			h('span', { style: { ...hintStyle, fontSize: font.caption, whiteSpace: 'nowrap' } }, `${c.chars ?? 0} 字`),
 			Btn({ variant: 'ghost', size: 'sm', action: 'read-chapter', id: c.no, title: `阅读第 ${c.no} 章`, ariaLabel: `阅读第 ${c.no} 章` }, '📖'),
+			Btn({ variant: 'ghost', size: 'sm', action: 'reader-wide', id: c.no, title: `宽屏阅读第 ${c.no} 章`, ariaLabel: `宽屏阅读第 ${c.no} 章` }, '⤢'),
 			Btn({ variant: 'ghost', size: 'sm', action: 'play-from', id: c.no, title: `从第 ${c.no} 章开始听`, ariaLabel: `从第 ${c.no} 章开始听` }, '▶'),
 		);
 		// 阅读卡插在命中的那一行后面（flatMap 展平，其余行保持原序）

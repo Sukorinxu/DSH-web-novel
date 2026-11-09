@@ -70,6 +70,12 @@ export function initialState() {
 		// 阅读器（0.13.1）：点目录行的 📖 展开正文。{ no, title, text, loading } | null
 		// 与播放互相独立——可以一边听一边看。
 		reader: null,
+		// 宽屏阅读/编辑浮层（FUSION 1.7）：{ no, title, text, loading, editing, draft, saving, error } | null
+		// 右栏窄，长章阅读/改稿走宿主页面宽度的浮层；读与写是同一份数据（读态 → 点「编辑」）。
+		readerOverlay: null,
+		// 双轨状态卡（FUSION 1.7）：GET /projects/:id/fusion —— 布局/版本策略/.git/进度。
+		// 打不开时置 error 但绝不阻塞面板其它区域（状态卡只是信息）。
+		fusionStatus: null, fusionLoading: false, fusionError: '',
 		// 提案队列（0.7.0）：模型提的修订稿，pending 时等用户点「应用」才生成新版本。
 		// 工具面没有 apply（见 lib/proposals.js）——「批准钥匙」在面板这一侧。
 		proposals: [], proposalsLoading: false,

@@ -1988,8 +1988,19 @@ test('★ 动作契约对账：视图发出的每个 data-action 控制器都有
     // 每个视图都要真渲染（播放态/空目录各来一份，把三条播放分支都逼出来）。
     const renders = [
         ['ProjectListView', () => I.ProjectListView({ state: sink })],
-        ['ProjectDetailView(基本信息)', () => I.ProjectDetailView({ state: { ...sink, detailTab: 'info' } })],
+        ['ProjectDetailView(概览)', () => I.ProjectDetailView({ state: { ...sink, detailTab: 'info' } })],
         ['ProjectDetailView(章节听书/播放中)', () => I.ProjectDetailView({ state: { ...sink, detailTab: 'chapters', playback: { status: 'playing', currentNo: 1 } } })],
+        // FUSION 1.7 把详情页拆成 5 个标签：每个标签都要单独渲染，否则藏在
+        // 非默认标签里的 data-action 全成漏网样本（对账是「视图发出的动作」全集）
+        ['ProjectDetailView(体检)', () => I.ProjectDetailView({ state: { ...sink, detailTab: 'health' } })],
+        ['ProjectDetailView(提案)', () => I.ProjectDetailView({ state: { ...sink, detailTab: 'proposals' } })],
+        ['ProjectDetailView(编辑)', () => I.ProjectDetailView({ state: { ...sink, detailTab: 'edit' } })],
+        ['ProjectDetailView(宽屏浮层/编辑态)', () => I.ProjectDetailView({
+            state: {
+                ...sink,
+                readerOverlay: { no: 1, title: '第一章', text: '正文', draft: '正文', loading: false, editing: true, saving: false, error: '' },
+            },
+        })],
         ['ChapterListView(暂停态)', () => I.ChapterListView({ state: { ...sink, playback: { status: 'paused', currentNo: 1 } } })],
         ['ChapterListView(空目录)', () => I.ChapterListView({ state: { ...sink, chapterList: [], reader: null } })],
         ['ProjectOverviewView', () => I.ProjectOverviewView({ state: sink })],

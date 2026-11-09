@@ -298,8 +298,60 @@ export const inputStyle = field();
 /** 稿纸区（本章正文编辑）：字号与行高按读稿调，不是按聊天框调。 */
 export const manuscriptStyle = {
 	...field({ mono: false }),
-	minHeight: '180px', resize: 'vertical',
-	fontSize: font.small, lineHeight: 1.85, letterSpacing: '.2px',
+	minHeight: '200px', resize: 'vertical',
+	fontSize: font.lead, lineHeight: 1.95, letterSpacing: '.3px',
+};
+
+// ── 阅读排版（宽屏阅读浮层 / 阅读卡）─────────────────────────────────────
+// 中文正文的阅读体验和 UI 文案不同：字号更大、行距更松、段首缩进 2em、
+// 两端对齐；正文用衬线字体栈（宿主是 sans UI 字体，长文读起来偏挤）。
+// 字体栈只列**系统自带**中文字体，不引外部字体（插件零依赖、离线可用）。
+export const readingFontFamily =
+	'"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", serif';
+export const readingBodyStyle = {
+	fontFamily: readingFontFamily,
+	fontSize: font.lead + 2,
+	lineHeight: 2.0,
+	letterSpacing: '.3px',
+	color: color.text,
+	textAlign: 'justify',
+	wordBreak: 'break-word',
+};
+export const readingParaStyle = {
+	textIndent: '2em',
+	margin: `0 0 ${space.md + 2}px`,
+};
+
+// ── 宽屏阅读/编辑浮层 ────────────────────────────────────────────────────
+// 右侧栏只有 ~360px，读长章是酷刑；浮层用宿主页面宽度，正文 max-width 760px
+// 保证每行 30–40 字（中文阅读舒适区）。
+export const overlayBackdropStyle = {
+	position: 'fixed', inset: 0, zIndex: 60,
+	background: 'rgba(15, 17, 21, .42)',
+	display: 'flex', alignItems: 'center', justifyContent: 'center',
+	padding: `${space.lg}px`,
+};
+export const overlayPanelStyle = {
+	display: 'flex', flexDirection: 'column',
+	width: 'min(920px, 94vw)', maxHeight: '92vh',
+	borderRadius: radius.lg,
+	background: V('bg-base', '#ffffff'),
+	border: `1px solid ${color.border2}`,
+	boxShadow: ELEV2,
+	overflow: 'hidden',
+};
+export const overlayHeaderStyle = {
+	display: 'flex', alignItems: 'center', gap: space.sm, flexWrap: 'wrap',
+	padding: `${space.md}px ${space.lg}px`,
+	borderBottom: `1px solid ${color.border1}`,
+	background: color.surface1,
+};
+export const overlayBodyStyle = {
+	flex: '1 1 auto', minHeight: 0, overflowY: 'auto',
+	padding: `${space.xl}px ${space.xxl + 8}px`,
+};
+export const overlayBodyInnerStyle = {
+	maxWidth: '760px', margin: '0 auto', ...readingBodyStyle,
 };
 
 /** 进度/占比条（体检通过率、字数等）。 */

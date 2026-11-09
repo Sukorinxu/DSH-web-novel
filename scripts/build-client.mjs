@@ -10,7 +10,11 @@
 // 产物形态（与官方插件一致）：
 //   window.__ModuleLoader__.load({ id, factory: (require) => {...; return module.exports } })
 // react 走 external，由宿主的 PLATFORM_MODULES 基座提供（不重复打包）。
-import { build } from 'esbuild';
+//
+// esbuild 是 devDependency：本机/离线环境可能装不上。构建器在这里**动态 import**，
+// 缺它就整链降级到 scripts/build-client-fallback.mjs（零依赖最小 ESM→CJS 转译器，
+// 产物契约与 esbuild 版一致、同样带 generated 头；只是不做 tree-shaking，体积大些）。
+// 这样 `npm run build` / `pretest` 在无网络机器上也能跑通，而不是卡在装包那一步。
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +23,15 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const entryRel = 'src/client/index.js';
 const outRel = 'lib/client.js';
+
+let build;
+try {
+	({ build } = await import('esbuild'));
+} catch {
+	console.warn('⚠️ esbuild 不可用（未安装 / 离线）——改用零依赖 fallback 构建器');
+	await import('./build-client-fallback.mjs');
+	process.exit(0);
+}
 
 // ── 守卫：版本号单一来源 ──
 // 源码里的 PLUGIN_VERSION 是运行时徽标，package.json 是发行版本；

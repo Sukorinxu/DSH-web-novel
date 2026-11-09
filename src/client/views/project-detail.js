@@ -20,6 +20,7 @@ import { Card, Btn, Chip, StatTile, Fold, Mono, Feedback } from '../ui.js';
 import { phaseLabel } from '../../../lib/phases.js';
 import { ChapterListView } from './chapters.js';
 import { ProjectOverviewView } from './overview.js';
+import { ReaderOverlay } from './reader-overlay.js';
 
 /** 分段控件（替代并排两个描边按钮：当前项一眼看得出）。 */
 function Segmented({ tab }) {
@@ -32,19 +33,27 @@ function Segmented({ tab }) {
 			//（底色若内联，选中项一悬停就会丢掉"选中"的样子）。
 			'data-nf-seg': '1', 'data-active': active ? '1' : '0',
 			style: {
-				flex: '1 1 0', padding: `${space.xs + 1}px ${space.md}px`,
+				flex: '1 1 0', padding: `${space.xs + 1}px ${space.xs}px`,
 				border: 'none', borderRadius: '7px', cursor: 'pointer',
-				fontFamily: 'inherit', fontSize: font.small,
+				fontFamily: 'inherit', fontSize: font.caption,
 				fontWeight: active ? weight.semibold : weight.normal,
+				// 5 个标签在窄栏里不能贴死：由内边距与换行控制密度
+				minWidth: 0, whiteSpace: 'nowrap',
 			},
 		}, label);
 	};
 	return h('div', {
 		style: {
 			display: 'flex', gap: '2px', padding: '2px',
-			borderRadius: '9px', background: color.inset,
+			borderRadius: '9px', background: color.inset, flexWrap: 'wrap',
 		},
-	}, item('info', '📋 基本信息'), item('chapters', '🎧 章节听书'));
+	},
+		item('info', '概览'),
+		item('chapters', '章节'),
+		item('health', '体检'),
+		item('proposals', '提案'),
+		item('edit', '编辑'),
+	);
 }
 
 /** 会话疲劳横幅（0.15.1）：服务端按当前会话聚合的首稿趋势——退化时提醒换会话。
@@ -238,16 +247,48 @@ export function ProjectDetailView({ state: s }) {
 			: null,
 	);
 
-	// ── 面包屑 ──
-	const crumb = h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm, minWidth: 0 } },
+	// ── 面包屑 + 快捷动作（FUSION 1.7）──
+	const crumb = h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm, minWidth: 0, flexWrap: 'wrap' } },
 		Btn({ variant: 'ghost', size: 'sm', action: 'back' }, '← 返回'),
 		h('span', {
 			style: {
 				fontWeight: weight.semibold, fontSize: font.lead, minWidth: 0,
-				overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+				overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto',
 			},
 		}, s.detail?.title || s.selected || ''),
 		s.detail?.stage ? Chip({ tone: 'accent' }, phaseLabel(s.detail.stage)) : null,
+		Btn({ variant: 'ghost', size: 'sm', action: 'quick-continue', title: '复制「继续写下一章」的会话指令（不占对话）' }, '🪶 继续写'),
+		Btn({ variant: 'ghost', size: 'sm', action: 'quick-audit', title: '复制定稿审计命令（fiction-suite Python 脚本）' }, '🧪 定稿审计'),
+	);
+
+	// ── 双轨状态卡（FUSION 1.7：布局 / 版本策略 / git 仓库）──
+	// 数据随详情回包（GET /projects/:id 的 fusion 字段）——不额外发请求、失败也不会
+	// 让卡片变成错误块：面板打不开详情时本来就没有书可写，状态卡只是信息。
+	const fs = s.detail?.fusion ?? null;
+	const fusionBlock = Card({ tone: 'plain' },
+		h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' } },
+			h('span', { style: { fontWeight: weight.semibold, fontSize: font.small } }, '🔀 双轨与落盘'),
+			fs ? h('span', { style: { ...hintStyle, fontSize: font.caption } }, `${(fs.chars ?? 0).toLocaleString()} 字`) : null,
+		),
+		!fs
+			? h('div', { style: { ...hintStyle, fontSize: font.caption, marginTop: space.sm } },
+				'布局与版本策略由插件配置决定（切换需重启 DSH web）。')
+			: h('div', null,
+				h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: space.sm, marginTop: space.sm } },
+					Chip({ tone: fs.layout === 'fiction-suite' ? 'accent' : 'neutral' },
+						fs.layout === 'fiction-suite' ? '布局 · fiction-suite' : '布局 · forge'),
+					Chip({ tone: fs.versioning === 'git' ? 'accent' : 'neutral' },
+						fs.versioning === 'git' ? '版本 · git 覆盖' : '版本 · vK 副本'),
+					Chip({ tone: fs.hasGit ? 'ok' : 'warn' }, fs.hasGit ? '.git 已就绪' : '.git 缺失（覆盖写无历史）'),
+					Chip({ tone: 'neutral' }, `已写 ${fs.chapterCount ?? 0} 章`),
+					Chip({ tone: 'neutral' }, `下一章 ${fs.nextChapter ?? 1}`),
+					fs.platformName ? Chip({ tone: 'neutral' }, fs.platformName) : null,
+				),
+				h('div', { style: { ...hintStyle, fontSize: font.caption, marginTop: space.xs, lineHeight: 1.7 } },
+					fs.versioning === 'git'
+						? 'git 模式：同一章正文只有一份文件（原地覆盖），历史交给书目录的 git——每章定稿/每次台账变更单独 commit；缺 .git 时写章回执会给警告。'
+						: 'vK 模式：同章每写一次追加一个版本文件，旧版永不覆盖。'),
+			),
 	);
 
 	// ── 全书体检（GET /continuity · 服务端纯函数，零 token）──
@@ -627,24 +668,40 @@ h('span', { style: { flex: '1 1 auto' } }),
 		s.charsError ? h('div', { style: { ...errStyle, fontSize: font.small, marginTop: space.xs } }, s.charsError) : null,
 	);
 
-	// ── 标签一：基本信息 ──
+	// ── 标签页内容（FUSION 1.7：从「一屏全堆」改成 5 段，找东西不用滚到底）──
 	// 注意别在这里套 Section 标题：卡片自己已经带标题了，套一层会得到
 	// 「✍️ 本章 / ✍️ 本章编辑」这种双标题。
+	const tab = s.detailTab ?? 'info';
 	const infoView = h('div', { style: stackStyle(space.lg) },
 		dashboardBlock,
 		ProjectOverviewView({ state: s }),
+		fusionBlock,
 		charLimitsBlock,
+	);
+	const healthView = h('div', { style: stackStyle(space.lg) },
 		continuityBlock,
 		diagnosisBlock,
+	);
+	const proposalsView = h('div', { style: stackStyle(space.lg) },
 		proposalsBlock,
+	);
+	const editView = h('div', { style: stackStyle(space.lg) },
 		editBlock,
 		batchBlock,
 	);
+	const bodyByTab = {
+		info: infoView,
+		health: healthView,
+		proposals: proposalsView,
+		edit: editView,
+	};
 
 	return h('div', { style: stackStyle(space.lg) },
 		crumb,
 		SessionFatigueBanner({ session: s.detail?.session, copied: s.copiedHandoff === true, rotatePending: s.rotatePending === true }),
-		Segmented({ tab: s.detailTab }),
-		s.detailTab === 'chapters' ? ChapterListView({ state: s }) : infoView,
+		Segmented({ tab }),
+		tab === 'chapters' ? ChapterListView({ state: s }) : (bodyByTab[tab] ?? infoView),
+		// 宽屏阅读/编辑浮层：position:fixed，挂在面板根里也能覆盖整个宿主页面
+		ReaderOverlay({ state: s }),
 	);
 }

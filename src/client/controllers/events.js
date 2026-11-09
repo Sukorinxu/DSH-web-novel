@@ -17,6 +17,26 @@ export function createEventsController(ctx) {
 		return true;
 	};
 
+	/** 复制文本到剪贴板（宽屏快捷动作用）；不可用时给可行动提示，不静默。 */
+	const copyText = (text, okMessage) => {
+		const clipboard = typeof navigator !== 'undefined' ? navigator?.clipboard : undefined;
+		if (typeof clipboard?.writeText !== 'function') {
+			state.error = '剪贴板不可用（非安全上下文）——请手动选中文本复制';
+			notify();
+			return;
+		}
+		clipboard.writeText(text)
+			.then(() => { state.notice = okMessage; notify(); })
+			.catch((error) => { state.error = `复制失败：${error?.message ?? error}`; notify(); });
+	};
+
+	/** 详情页宽屏浮层的统一态更新（浮层关闭后迟到的响应不许再写回）。 */
+	const updateOverlay = (no, patch) => {
+		if (state.readerOverlay?.no !== no) return false;
+		state.readerOverlay = { ...state.readerOverlay, ...patch };
+		return true;
+	};
+
 	const handleAction = async (action, target) => {
 		syncSession();   // 所有带会话戳的动作（润色/校对/写章/认领/创建）先对齐真会话 id
 		state.error = ''; state.notice = '';
@@ -57,11 +77,13 @@ export function createEventsController(ctx) {
 				if (!intentLeave({ kind: 'back' })) break;
 				await ctx.goBack(); break;
 			case 'claim': await ctx.claimProject(target.dataset.id || null); break;
-			// 详情页两个标签：基本信息 / 章节听书
+			// 详情页标签（FUSION 1.7 起 5 个）：概览 / 章节 / 体检 / 提案 / 编辑
 			case 'detail-tab': {
-				const tab = target.dataset.tab === 'chapters' ? 'chapters' : 'info';
+				const tab = ['info', 'chapters', 'health', 'proposals', 'edit'].includes(target.dataset.tab)
+					? target.dataset.tab : 'info';
 				if (state.detailTab !== tab) state.detailTab = tab;
 				if (tab === 'chapters') await ctx.loadChapterList();
+				if (tab === 'edit' && state.selected && state.chapterNo) await ctx.loadChapter(state.chapterNo);
 				notify(); break;
 			}
 			case 'play-from': {
@@ -124,6 +146,96 @@ export function createEventsController(ctx) {
 					break;
 				}
 			case 'close-reader': state.reader = null; notify(); break;
+			// ── 宽屏阅读/编辑浮层（FUSION 1.7）：右栏窄，长章放到宿主页面宽度里读/改 ──
+			case 'reader-wide': {
+				const no = Number(target.dataset.id);
+				if (!Number.isFinite(no) || no <= 0) {
+					state.error = `拿不到要宽屏阅读的章号（按钮上应有 data-id，实际是 "${target.dataset.id ?? ''}"）`;
+					notify();
+					break;
+				}
+				const meta = state.chapterList.find((c) => c.no === no);
+				state.readerOverlay = {
+					no, title: meta?.title ?? `第 ${no} 章`, text: '', draft: '', draftVersion: 0,
+					loading: true, editing: false, saving: false, error: '',
+				};
+				notify();
+				try {
+					const text = await apiFetch(`/projects/${encodeURIComponent(state.selected)}/chapters/${no}`);
+					if (updateOverlay(no, { text: String(text ?? ''), draft: String(text ?? ''), loading: false })) notify();
+				} catch (error) {
+					// 失败不许留半开浮层；报错原文给出来
+					if (state.readerOverlay?.no === no) state.readerOverlay = null;
+					state.error = `读不出第 ${no} 章正文：${String(error?.message ?? error)}`;
+					notify();
+				}
+				break;
+			}
+			case 'reader-close': state.readerOverlay = null; notify(); break;
+			case 'reader-edit': {
+				if (!state.readerOverlay || state.readerOverlay.loading) break;
+				state.readerOverlay = {
+					...state.readerOverlay,
+					editing: true,
+					draft: state.readerOverlay.text,
+					draftVersion: (state.readerOverlay.draftVersion ?? 0) + 1,
+					error: '',
+				};
+				notify();
+				break;
+			}
+			case 'reader-cancel-edit': {
+				if (!state.readerOverlay) break;
+				state.readerOverlay = { ...state.readerOverlay, editing: false, draft: state.readerOverlay.text, error: '' };
+				notify();
+				break;
+			}
+			case 'reader-save': {
+				const ov = state.readerOverlay;
+				if (!ov || !state.selected || ov.editing !== true) break;
+				const bookId = state.selected;
+				const no = ov.no;
+				const text = String(ov.draft ?? '');
+				state.readerOverlay = { ...ov, saving: true, error: '' };
+				notify();
+				try {
+					await apiFetch(`/projects/${encodeURIComponent(bookId)}/chapters/${no}`, {
+						method: 'POST', body: JSON.stringify({ text }),
+					});
+					if (updateOverlay(no, { saving: false, editing: false, text, draft: text, error: '' })) {
+						state.notice = `已保存：第 ${no} 章${state.chapterNo === no ? '（面板编辑器同步需刷新）' : ''}`;
+					}
+				} catch (error) {
+					// 门禁拦下与其它失败都摆在浮层里：原文在 textarea，用户不需要关掉重找
+					updateOverlay(no, { saving: false, error: String(error?.message ?? error) });
+				}
+				notify();
+				break;
+			}
+			// 快捷动作：复制「继续写下一章」的会话指令 / 定稿审计命令（剪贴板，不占对话）
+			case 'quick-continue': {
+				const chapters = Object.keys(state.detail?.chapters ?? {}).map(Number).filter((n) => Number.isFinite(n));
+				const latest = chapters.length > 0 ? Math.max(...chapters) : 0;
+				const next = latest + 1;
+				const title = state.detail?.title || state.selected || '这本书';
+				copyText(
+					`继续写《${title}》第 ${next} 章：先 novel_outline save_chapter（第${next}章，含「## 本章必写场景」与「## 本章禁止偏离项」契约段）→ novel_outline approve → novel_briefing chapter=${next} → 按简报写正文 → novel_write_chapter 落盘。一次只写一章，写完停下汇报。`,
+					`已复制「继续写第 ${next} 章」的指令——粘贴到会话输入框即可`,
+				);
+				break;
+			}
+			case 'quick-audit': {
+				const no = state.chapterNo;
+				const rec = state.detail?.chapters?.[String(no)];
+				const file = (rec && typeof rec === 'object' && rec.file) ? rec.file : '';
+				const rel = file ? `${state.selected}/${file}` : `${state.selected}/06-正文/第${String(no).padStart(3, '0')}章*.md`;
+				copyText(
+					`python "$HOME/.dsh/skills/fiction-suite/scripts/novel_audit.py" --file "${rel}" --kind 定稿`,
+					`已复制第 ${no} 章定稿审计命令（在会话里让 AI 用 shell 跑，或在终端粘贴）`,
+				);
+				break;
+			}
+			case 'refresh-fusion': break;
 			case 'playback-pause': player.pause(); notify(); break;
 			case 'playback-resume': player.resume(); notify(); break;
 			case 'playback-stop': player.stop(); notify(); break;
@@ -265,6 +377,8 @@ export function createEventsController(ctx) {
 		else if (field === 'chars-value') { state.charsValue = e.target.value; }
 		else if (field === 'project-filter') { state.filter = e.target.value; notify(); }
 		else if (field === 'draft') { state.draft = e.target.value; state.draftModified = e.target.value !== state.baseline; }
+		// 宽屏浮层的编辑区：受控值只更新不重渲染（textarea 是 defaultValue 非受控）
+		else if (field === 'reader-draft') { if (state.readerOverlay) state.readerOverlay = { ...state.readerOverlay, draft: e.target.value }; }
 		else if (field === 'rename-value') { if (state.rename) state.rename.value = e.target.value; }
 		else if (field === 'clone-value') { if (state.clone) state.clone.value = e.target.value; }
 		else if (field === 'chapterNo') {
@@ -294,6 +408,14 @@ export function createEventsController(ctx) {
 		else if (field === 'batch-concurrency') state.batchConcurrency = e.target.value;
 		else if (field === 'batch-force') state.batchForce = e.target.checked === true;
 	};
+	/** 宽屏浮层：Esc 关闭（读/编同一出口）。 */
+	const onKeyDown = (e) => {
+		if (e?.key === 'Escape' && state.readerOverlay) {
+			e.preventDefault?.();
+			state.readerOverlay = null;
+			notify();
+		}
+	};
 
 	let bound = null;
 	const attach = (node) => {
@@ -303,6 +425,7 @@ export function createEventsController(ctx) {
 		node.addEventListener('click', onClick);
 		node.addEventListener('input', onInput);
 		node.addEventListener('change', onChangeEvent);
+		node.addEventListener('keydown', onKeyDown);
 	};
 	const detach = () => {
 		if (!bound) return;
@@ -310,6 +433,7 @@ export function createEventsController(ctx) {
 			bound.removeEventListener('click', onClick);
 			bound.removeEventListener('input', onInput);
 			bound.removeEventListener('change', onChangeEvent);
+			bound.removeEventListener('keydown', onKeyDown);
 		} catch { /* 节点已被框架拆掉 */ }
 		bound = null;
 	};

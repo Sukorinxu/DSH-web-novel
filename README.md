@@ -46,6 +46,12 @@ DeepSeek Harness（DSH）的中文长篇写作插件。它不是「提示词合�
 `novel_import action=scan` 发现 + `action=adopt` 按原章号接入成新书（源目录只读）；③ 单文件源用
 `novel_import` 切分重建。详见 [FUSION.md](./FUSION.md) 第 5 节。
 
+**融合版 UI（1.7）**：详情页拆成 5 个标签（概览 / 章节 / 体检 / 提案 / 编辑），不再一屏堆到底；
+章节目录与阅读卡新增「⤢ 宽屏」——**宽屏阅读/编辑浮层**用宿主页面宽度（正文 760px 限宽、
+衬线字体栈、段首缩进、2.0 行高），读态一键切编辑，保存仍走同一条门禁 API；
+概览新增「双轨与落盘」状态卡（布局 / 版本策略 / `.git` 是否就绪 / 进度 / 平台）；
+顶栏新增「🪶 继续写」「🧪 定稿审计」快捷按钮（复制指令/命令到剪贴板，不占对话）。
+
 ## 界面一览
 
 右侧栏「锻炉」面板实机渲染（以下均为**虚构示例数据**，非真实书目）：
@@ -295,6 +301,7 @@ containment 与版本守卫语义（含 `readBytes` 字节原语——`.docx` �
 ```bash
 npm run setup-dev   # 把 DSH checkout 的宿主 SDK 真包 symlink 进本地 node_modules
 npm run build       # src/client/ → lib/client.js（改客户端源码后必须跑；npm test 会自动跑）
+npm run build:fallback  # 无 esbuild 环境（离线/装不上包）的零依赖构建器；`npm run build` 检测不到 esbuild 会自动降级到它（产物契约相同，只是不做 tree-shaking、体积大些）
 npm run audit       # 静态自检：① 调用了但没导入/声明 ② 孤儿 dataset.X 读取（npm test 前置也跑）
 npm run preview     # 生成可交互 UI 预览 preview/forge-ui.html（内联真产物 + 宿主真 token，离线可开）
 npm test            # node --test 全量用例（纯逻辑单测 + 假 fs 全链路冒烟 + REST 行为测试 + 真校验器输出契约 + headless 行为测试；条数见顶部 tests 徽章）

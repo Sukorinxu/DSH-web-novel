@@ -159,6 +159,8 @@ export function createProjectsController(ctx) {
 		state.dashboard = null; state.dashboardError = '';
 		state.diagnosis = null; state.diagnosisError = '';
 		state.reader = null; // 阅读器也属于「上一本书」
+		state.readerOverlay = null; // 宽屏浮层同样属于「上一本书」
+		state.fusionStatus = null; state.fusionError = ''; state.fusionLoading = false;
 		player.stop();
 		notify();
 		// detail 与 第 1 章正文并行拉；elements/chapters 由以下并行加载
@@ -169,6 +171,8 @@ export function createProjectsController(ctx) {
 			]);
 			if (myOpen !== seq.open) return; // 期间已打开别的书：整体作废
 			state.detail = detail;
+			// 双轨状态随详情一起回来（布局/版本策略/.git/进度）——零额外请求
+			state.fusionStatus = detail?.fusion ?? null;
 			// 字数输入框用服务端现值初始化（盘上的真值，不是空串）。此前恒为 ''：
 			// 输入框靠 defaultValue 显示着「2500-3500」，state 里却记着空——用户没碰
 			// 输入框直接点「保存」，就把自定义区间清掉了（静默破坏，无报错无提示）。
