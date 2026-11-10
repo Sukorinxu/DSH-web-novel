@@ -19,15 +19,33 @@ Most writing plugins put their constraints in system prompts — the model obeys
 
 ## UI Tour
 
-The right-sidebar "Forge" panel, rendered from the real `lib/client.js` (these are **fictional sample data**, not real books):
+"Zaoshen" (造神) lives in the right sidebar and now has **one entry point: the H5 web app**
+(the legacy React panel is retired). The H5 app is PC-first and follows the information
+architecture of a Qidian book page (layout reference only): dark top bar → breadcrumb →
+book header (generated CSS cover / title / stage · updated / tags / stats / continue reading ·
+catalog · settings) → left column "Intro / Latest chapters / Catalog preview / Status" +
+right column "Book data / Quick actions / Other books". Catalog groups 50 chapters and is
+searchable; the reader has an 800px column, an `Aa` panel (font size / line height / family /
+width / background), progress bar, arrow-key and click-zone chapter turns, and a chapter-end
+card (copy continue-writing prompt / mark as read). Mobile collapses to a single column.
+
+The H5 app is a full control console: top navigation covers Book / Catalog / Characters /
+Worldbook / Foreshadows / Health / Tools / Settings (book-scoped pages hide when no book is
+selected); the shelf offers "New book" and "Import / Adopt" (new book, legacy-workspace scan
+and one-click adopt, **local folder import**, paste-text import, workspace-file import).
+The Tools page exposes all 23 `novel_*` tools through `GET /tools` + `POST /rpc` with forms
+generated from each tool's JSON schema — the same gates, ledgers and versioning as the chat
+channel. Book settings (chapter length / platform / logline) share the same storage.
+(These screenshots use **fictional sample data**: the demo book "Long Night (Sample)".)
 
 | | |
 | --- | --- |
-| **Project list**<br><img src="assets/mockups/png/dark-1-项目列表.png" width="100%"> | **Detail · Overview** (full-book health dashboard)<br><img src="assets/mockups/png/dark-2-详情-基本信息.png" width="100%"> |
-| **Polish guard rejects** (core selling point: code says no, with full reasons)<br><img src="assets/mockups/png/dark-5-润色守卫拦下.png" width="100%"> | **Batch drafting** (concurrent gen · serial gating · checkpoint resume)<br><img src="assets/mockups/png/dark-6-批量起草.png" width="100%"> |
-| **Chapter text-to-speech**<br><img src="assets/mockups/png/dark-3-章节听书.png" width="100%"> | **Worldbook**<br><img src="assets/mockups/png/dark-4-世界书.png" width="100%"> |
+| **Book detail** (cover / stats / continue reading)<br><img src="assets/screenshots-h5/01-detail.png" width="100%"> | **Catalog** (50-chapter groups + search)<br><img src="assets/screenshots-h5/02-catalog.png" width="100%"> |
+| **Reader** (Aa settings / progress / chapter-end card)<br><img src="assets/screenshots-h5/03-reader.png" width="100%"> | **Tools** (23 `novel_*` tools with schema-driven forms)<br><img src="assets/screenshots-h5/04-tools.png" width="100%"> |
+| **Settings** (book length/platform/logline + reading prefs)<br><img src="assets/screenshots-h5/05-settings.png" width="100%"> | |
 
-> The screenshots above are **real renders** of `lib/client.js` (not hand-drawn mocks): run `npm run preview` to generate the preview page, then `assets/mockups/shoot-real.cjs` to reproduce — both light and dark themes track the host.
+> The screenshots above are **real renders** of the H5 app (headless Chromium; reproducible via
+> `node scripts/shoot-h5.mjs`, sample data sanitized).
 
 The failure modes of AI long-form writing aren't magic — each has an engineering answer. This plugin encodes the parts with a clear right/wrong into code:
 
@@ -80,7 +98,7 @@ dsh plugin --profile web add link:/path/to/dsh-novel-forge
 
 **Step 2 · Restart DSH web, then hard-refresh the browser** (the client bundle is snapshotted at process start; without a restart it's as if you never installed it).
 
-**Step 3 · Verify the install**: a standalone "🔨 Forge" tab appears in the right sidebar; in a session, ask the model to "list the novel tools" — you should see 20 `novel_*` tools. The agent preset "Novel Forge" is also auto-deployed to `~/.dsh/.agent-presets/novel-forge/` (skipped if already present, never overwritten; `DSH_NOVEL_FORGE_REDEPLOY=1` forces a redeploy, `DSH_NOVEL_FORGE_SKIP_DEPLOY=1` disables it).
+**Step 3 · Verify the install**: a standalone "造神" tab appears in the right sidebar; in a session, ask the model to "list the novel tools" — you should see 23 `novel_*` tools. The agent preset is declared by this bundle's `cordis.patch.yml`.
 
 **Step 4 · Create your first book**: just tell the model in a session, e.g.:
 
@@ -88,14 +106,14 @@ dsh plugin --profile web add link:/path/to/dsh-novel-forge
 
 **Step 5 · Follow the nine stages**: the model guides you through premise → setting → characters → outline → volumes → chapter outlines → body, in order; at each stage it directly lists what's missing. You must `novel_outline approve` the chapter outline before writing it — that's by design, not a bug.
 
-**Step 6 · Collect results in the panel**: in the right-sidebar "Forge" tab you can read / listen, click polish / proofread (outputs are **proposals** — you click "apply" in the panel to make them take effect), run the full-book health check, and export the whole book.
+**Step 6 · Collect results in the H5 app**: in the right-sidebar "造神" H5 you can read, browse the catalog, check characters / worldbook / foreshadowing / health, run all 23 tools (polish / proofread / audit / export, …) from the Tools page, and edit this book's settings.
 
 Host version requirements and the dependency surface are in [COMPATIBILITY.md](./COMPATIBILITY.md).
 
-## Division of labor: session vs. panel
+## Division of labor: session vs. H5
 
 - **In a session (model + `novel_*` tools)**: all creative actions — create book, outline, detailed outline, write chapter, ledger, audit. Writing a chapter must go through the session (briefing + multi-stage commit gates form a multi-turn loop).
-- **Panel (right-sidebar "Forge")**: read & listen, polish / proofread (side-channel engine, outputs proposals), full-book health check, golden-three-chapter diagnosis, batch drafting (with checkpoint resume), proposal approval (apply / discard), book-card management (rename / delete / clone), session-fatigue monitoring & one-click handoff.
+- **H5 (right-sidebar "造神")**: shelf and create/import, book detail and catalog, reader, characters / worldbook / foreshadowing / health views, the Tools page (form entry for all 23 `novel_*` tools), and book settings — sharing the same gates, ledgers and versioning as the chat channel.
 
 Typical session flow:
 
@@ -109,24 +127,23 @@ novel_project init → novel_project phase (see the nine-stage board, fill entry
     → draft per the outline → novel_write_chapter (gate / mechanical check / ledger / content gate / contract metrics / circuit breaker / commit)
     → novel_noai_scan + novel_audit (evidence) → you (or the model, citing evidence) review
     → before publishing: novel_audit platform:qidian|fanqie|jjwxc|qimao|feilu + novel_audit censor:true
-    → revisions: novel_propose propose → user confirms in panel → v2 generated (old version never overwritten)
-```
+    → revisions: novel_propose propose → user confirms via the proposal endpoint → v2 generated (old version never overwritten)```
 
-## Panel feature overview
+## H5 feature overview
 
 | Feature | Entry | Description |
 | --- | --- | --- |
-| Project list | "🔨 Forge" tab | filtered by **session** (projects follow the session); rename / delete / clone; filter box appears above 8 books |
-| Claim old books | bottom of list | books built before 0.5.0 with no owner, claim to current session in one click |
-| 🎛 Creation cockpit | detail page | automatically aggregates progress, health checks, outline, proposals, diagnosis, and book-scoped char limits; samples the first 3 plus latest 12 chapters for platform review, so the next action comes before a pile of per-chapter tables |
-| 📋 Overview | detail page | archive / outline / character cards / timeline summary; read chapter (📖 reading card), save, **export**, **golden-three-chapter diagnosis** |
-| 🎧 Chapter TTS | detail page | TOC + continuous speech (pause / resume / stop, auto-advances to next chapter when done); each row has 📖 read / ▶ speak, reading and listening are independent |
-| One-click polish / mechanical proofread | chapter | runs through the side-channel engine, output is a **proposal**, doesn't touch the body directly; proofread guard is stricter (length cap 1.06) |
-| Full-book health check | detail page | dead-character revival / ledger contradictions / overdue foreshadowing / chapter-number gaps / missing character cards, zero token |
-| Golden-three-chapter diagnosis | overview card | four-axis numbers (hook / opening / conflict / infodump) + overall verdict, pure wordlist, zero token |
-| Batch drafting | detail page | concurrent generation, serial commit; per-chapter success/failure laid out; concurrency cap 4, default 1; after interruption "continue last batch (chapters a–b, N committed)" resumes from checkpoint |
-| Session fatigue & handoff | detail-page banner | within-session first-draft decline / session average under 70% of other sessions' first drafts / ≥8 consecutive chapters triggers a warning (the write-progress card carries a session-status line, labelled "first draft = pre-gate draft"); "create new session and hand off" builds + archives a new session in one click, handoff summary auto-copies to clipboard, paste into the new session to continue seamlessly |
-| Proposal approval | detail page | view full proposal → apply (generate new version) / discard; old version never overwritten |
+| Shelf / New book | shelf top | "New book" fills book name / title / genre / premise / chapter length / platform / workspace → `novel_project init` |
+| Import / Adopt | shelf top | scan legacy workspaces → one-click adopt (source stays read-only), file import (single file / local folder), paste-text import |
+| Book detail | top nav | cover / title / stage / updated / tags / stats / continue reading · catalog · settings; left column intro / latest chapters / catalog preview, right column book data / quick actions / other books |
+| Catalog | top nav | 50-chapter groups + search (number / title / summary) |
+| Reader | detail / catalog | 800px column, `Aa` settings (size / line height / family / width / background), progress bar, ←/→ and click-zone chapter turns, chapter-end card (copy continue-writing prompt / mark as read) |
+| Characters | top nav | character card list (injected by cast when writing) |
+| Worldbook | top nav | entries, keywords, priority, always-on/disabled state (lazy loaded) |
+| Foreshadowing | top nav | open/paid, setup chapter, planned payoff chapter, missing-plan flag |
+| Health | top nav | `/continuity` hard-error / warning counts + per-issue list, rerunnable (zero token) |
+| Tools | top nav | all 23 `novel_*` tools with schema-generated forms (enum / bool / long text / JSON); write tools refresh the book after running |
+| Settings | top nav / detail | book chapter-length / platform / logline; reader preferences stored locally |
 
 ## 23 tools
 
@@ -146,7 +163,7 @@ novel_project init → novel_project phase (see the nine-stage board, fill entry
 | `novel_noai_scan` | eight-dimension anti-AI-smell scan | fully local, zero cost |
 | `novel_audit` | deterministic chapter audit + contract metrics + `continuity` whole-book consistency + `voice` voice-gene check + `platform` **Qidian / Fanqie / Jinjiang / Qimao / Feilu five-platform review** + `censor` **seven-category sensitivity self-check** | mechanical evidence; platform health table gives actionable fixes |
 | `novel_style` | prose six-axis baseline (μ±σ band) + **mood spectrum 12 axes**: build baseline / check against (incl. dominant-mood drift) | fully local, zero cost; reports numbers only, no labels |
-| `novel_propose` | proposal / list | edits go through proposals, user applies in panel; old versions never overwritten |
+| `novel_propose` | proposal / list | edits go through proposals, the user applies via the proposal endpoint; old versions never overwritten |
 | `novel_import` | local book import (preview/import/**backfill gate replay**; file supports `.md`/`.txt`/`.docx` — docx split by Word heading styles and "Chapter N" rules) | pure-function chapter split; create book + versioned commit; docx uses `readBytes` byte channel (text channel corrupts binary), rejects zip64, 48MB decompress cap |
 | `novel_export` | export whole book (md/txt + stats) | assembled in version order, written to `导出/` |
 | `novel_diagnose` | golden-three-chapter four-axis diagnosis (hook / opening / conflict / infodump) | deterministic numbers, mechanical and model review separated |
@@ -242,7 +259,7 @@ containment and version-guard semantics (including the `readBytes` byte primitiv
 | Outline coverage 0% but the scene was written | Coverage matches the outline's "must-write scene" titles lexically (heuristic); align the scene title wording with the outline entry |
 | "One-click write chapter" button 501 | By design: writing a chapter requires the briefing + multi-stage commit gates, and can only be done in a session |
 | "Continue last batch" returns 409 `BATCH_RUNNING` | The last batch may still be running: wait for it to finish, or only resume after >10 minutes (anti-double-run guard; a stale checkpoint from a web restart auto-releases after timeout) |
-| Panel returns 403 `FORBIDDEN_HOST` | The access address isn't localhost (you used a LAN IP or domain) — the panel API only allows localhost/127.0.0.1/[::1]; open DSH web with a local address (see "Known boundaries" for the security model). Accessing via your own domain: add the bare hostname to the plugin config `allowedHosts` array (e.g. `"forge.example.cn"`; no port, case-insensitive; Origin shares the same set; default empty = localhost only). SSH tunnels / port changes always need no config |
+| API returns 403 `FORBIDDEN_HOST` | The access address isn't localhost (you used a LAN IP or domain) — the panel API only allows localhost/127.0.0.1/[::1]; open DSH web with a local address (see "Known boundaries" for the security model). Accessing via your own domain: add the bare hostname to the plugin config `allowedHosts` array (e.g. `"forge.example.cn"`; no port, case-insensitive; Origin shares the same set; default empty = localhost only). SSH tunnels / port changes always need no config |
 | The Forge tab auto-opens on every load | By design (the Forge is a persistent right-sidebar tab). To stop the auto-open: plugin config `autoOpenPanel: false` — the tab stays in the sidebar, it just won't pop open on its own; a failed config read falls back to true (auto-open is a nicety and must not be held hostage by service availability) |
 | After a few dozen chapters the whole turn fails with 400 `CONTEXT_WINDOW_EXCEEDED` / model token limit | Session history only grows: every chapter draft (twice — tool call + receipt) plus each briefing pack and all tool receipts stay in history (real-machine evidence: 42 chapters ≈ 490k input tokens). **The book is fine** — click "Create new session and hand off" in the panel (or copy the handoff summary into a new session) and continue with the next chapter; don't retry the old session. The fatigue banner and the write-chapter receipt raise a hard warning early based on a volume estimate (default: 60% of a 256k budget; the estimate is conservative — real history is only larger) |
 
@@ -268,7 +285,7 @@ the three-step panel-entry contract, etc.) are in [AGENTS.md](./AGENTS.md).
 - Batch-draft concurrency cap is **4** (default 1; forced down to 1 when the book has no scene contract); concurrency only applies to drafting, commit is always serial.
 - `novel_search` is **lexical retrieval + LLM label enhancement**, not embedding semantic retrieval; the index is a single-file sqlite, not stress-tested on 100k-block mega-books; `annotate` incurs real token cost (default at most 20 blocks per run).
 - Cross-chapter repetition detection is a sliding window (default previous 10 chapters, adjustable) — repetition beyond the window isn't caught; worldbook recursive activation is capped at 2 rounds.
-- Panel TTS uses Web Speech synthesis, with body chunking to prevent Chrome long-text stalls; environments without a speech engine return a readable error.
+- Reader chapter turns, progress and reading preferences are stored locally in the browser; the body is rendered directly by the H5 app, never through the model.
 
 ## License
 

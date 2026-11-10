@@ -8,6 +8,13 @@
 - 接入页按钮文字换行：页签改为 3 项并加 `white-space:nowrap` + 横向滚动；书架入口文案缩短为「导入 / 接入」。
 - 扫描旧稿：工作区选择器提到扫描表单最上方，标题「扫描工作区（新书也落在这里）」；切换工作区会清空上次扫描结果，扫描与接入使用同一个工作区根。
 
+### 文档
+
+- README / README.en「界面一览」整块换成 H5 实机截图（作品详情 / 目录 / 阅读 / 工具台 / 设置，虚构示例书、已脱敏），
+  并重写 UI 说明与快速开始/分工章节：统一为「右侧栏 H5 唯一入口」，移除经典面板时代的 5 标签、听书、面板提案审批等旧表述。
+- 删除旧的 React 面板截图与 mockup 资产（`assets/mockups`、`assets/screenshots`），新增 `assets/screenshots-h5/`；
+  `screenshots.json` 同步更新；新增 `scripts/shoot-h5.mjs`（headless Chromium + CDP）用于复现截图。
+
 ## v1.13.0 (2026-11-10)
 
 ### 新增
