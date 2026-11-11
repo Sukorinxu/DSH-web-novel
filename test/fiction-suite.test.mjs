@@ -58,6 +58,16 @@ test('fiction-suite: 只从显式标签抽预填字段，不猜正文', () => {
     assert.deepEqual(extractTemplateHints('这是一段正文，没有标签。'), {});
 });
 
+
+test('fiction-suite: 旧稿同义标题（核心承诺/金手指与系统规则）只在标题行认，不扫正文', () => {
+    const text = '# 设定圣经\n## 核心承诺\n## 金手指与系统规则\n正文里提到高潮与开头，但这不是标题。\n';
+    const r = inspectContent(text, specs, 40);
+    assert.equal(r.best, null, '两个同义标题不足以升格为强匹配');
+    const setting = r.matches.find((m) => m.templateId === 'world-building');
+    assert.ok(setting.score > 0 && setting.score < 40);
+    assert.ok(setting.hits.includes('核心规则'));
+});
+
 test('fiction-suite: 标题相似度按命中章节比例计分', () => {
     const partial = '# 世界观设定\n## 基本设定\n## 关键地点\n';
     const matches = matchTemplates(partial, specs);
