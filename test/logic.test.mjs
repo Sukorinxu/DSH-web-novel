@@ -1709,12 +1709,12 @@ test('G2 书库：单章指标——段落/对话/句长', () => {
     assert.equal(chapterMetrics('').dialogueRatio, 0);
 });
 
-test('★ 字数标准：机审门槛默认值=网文连载单章 2000–4000（目标 3000）', async () => {
-    // Config 默认值：500→2000、12000→4000（2026-09-15 起，仙尊定的标准）
+test('★ 字数标准：机审门槛默认值=网文连载单章 2000–5000（目标 3500）', async () => {
+    // Config 默认值：500→2000、4000→5000（2026-11-11 起，用户定的标准）
     const { Config } = await import('../lib/index.js');
     const parsed = Config({}); // schemastery 的 schema 是可调用对象，不是 zod 的 .parse
     assert.equal(parsed.minChapterChars, 2000, '低于 2000 字的单章不该被默认放行');
-    assert.equal(parsed.maxChapterChars, 4000, '超 4000 按起点标准该提示拆章');
+    assert.equal(parsed.maxChapterChars, 5000, '超 5000 该提示拆章');
     assert.ok(parsed.maxChapterChars > parsed.minChapterChars);
 });
 
@@ -2372,7 +2372,7 @@ test('★ fsio 沙箱拒绝识别优先匹配结构化 code（宿主文案改版
     const fsio = createFsio(fakeCtx, { agent: { session: { header: { cwd: '/w', id: 's' } } } }, '/w');
     await assert.rejects(
         fsio.writeText('书/novel.json', '{}', 'replace'),
-        (e) => e.message.includes('write blocked by policy') && e.message.includes('dsh-novel-forge'),
+        (e) => e.message.includes('write blocked by policy') && e.message.includes('dsh-web-novel'),
         'code 命中即改写提示（原信息保留）——文案漂移不再让诊断静默失效',
     );
     // 无 code 且文案不匹配 → 原样上抛，绝不误改写

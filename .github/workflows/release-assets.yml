@@ -27,8 +27,8 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: |
           VERSION="${TAG#v}"
-          ZIP="dsh-novel-forge-${VERSION}.zip"
+          ZIP="dsh-web-novel-${VERSION}.zip"
           # HEAD 即 tag 指向的提交（checkout 已锁定 ref）；不引 tag 名，避免浅克隆下 tag ref 缺失
-          git archive --format=zip --prefix="dsh-novel-forge-${VERSION}/" -o "$ZIP" HEAD
+          git archive --format=zip --prefix="dsh-web-novel-${VERSION}/" -o "$ZIP" HEAD
           gh release upload "$TAG" "$ZIP" --clobber --repo "$GITHUB_REPOSITORY"
           echo "attached: $ZIP"

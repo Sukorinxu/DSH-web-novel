@@ -82,7 +82,7 @@ function makeBackend(root) {
  */
 export async function bootPlugin(opts = {}) {
     const { apply } = await import('../../lib/index.js');
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-plugin-'));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-plugin-'));
     const registered = [];
     const sections = [];
     const ctx = {

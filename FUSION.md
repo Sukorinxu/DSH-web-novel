@@ -5,7 +5,7 @@
 
 ## 1. 定位
 
-- **引擎与方法论分离**：dsh-novel-forge 继续当机械引擎——23 个 `novel_*` 工具、九阶段门禁、
+- **引擎与方法论分离**：dsh-web-novel 继续当机械引擎——23 个 `novel_*` 工具、九阶段门禁、
   事实/关系/弧线账本、提案制、右侧栏「造神」面板；用户的 `fiction-suite` 技能当方法论——
   选题、赛道、大纲、细纲、节奏、去 AI 味、语言指纹、台账规范、平台口径与**全部阈值**。
 - **书稿目录跟 fiction-suite 走，机器状态保留插件格式**：正文/细纲/大纲/人物卡/承诺书按
@@ -219,23 +219,23 @@ python "$HOME/.dsh/skills/fiction-suite/scripts/check_chapter.py" "06-正文/第
 
 ```text
 C:\Users\xuaol\.dsh\profiles\desktop\package.json
-  "dsh-novel-forge": "link:F:/DSHcache/dsh-novel-forge"
-  dsh.profile.bundles: [..., "dsh-novel-forge"]
+  "dsh-web-novel": "link:F:/DSHcache/dsh-web-novel"
+  dsh.profile.bundles: [..., "dsh-web-novel"]
 ```
 
 因此：
 
 - **改代码**：改本仓库 → 跑测试 → 在 plugin_manager 里把 bundle 禁用再启用（或重启 DSH web，
   客户端面板必须重启 + 浏览器硬刷新才会重新加载 `lib/client.js`）。
-- **改预设**（`lib/preset/novel-forge/agent.cordis.yml` / `preset.yml`）：必须先
+- **改预设**（`lib/preset/dsh-web-novel/agent.cordis.yml` / `preset.yml`）：必须先
   `node scripts/build-fusion-patch.mjs` 重新生成 `cordis.patch.yml`，再禁用/启用 bundle；
   改完不重生成 = 预设还是旧的（`test/fusion-layout.test.mjs` 会报漂移）。
-- **重装**：`plugin_manager action=install_bundle target=F:\DSHcache\dsh-novel-forge`；
+- **重装**：`plugin_manager action=install_bundle target=F:\DSHcache\dsh-web-novel`；
   仓库被移动/删除后 link 会失效，必须重装（或重新 link 后重启）。
-- **首次使用**：新建会话，在预设列表里选「造神」（Loader 行 `preset-novel-forge`）；
+- **首次使用**：新建会话，在预设列表里选「造神」（Loader 行 `preset-dsh-web-novel`）；
   旧会话不会自动换成新预设。
 - **验证是否真的生效**：
-  - `plugin_manager list_plugins` 里 `include:dsh-novel-forge` 与 `include:preset-novel-forge`
+  - `plugin_manager list_plugins` 里 `include:dsh-web-novel` 与 `include:preset-dsh-web-novel`
     都应为 `fiberPhase: active`；
   - 会话工具列表里有 23 个 `novel_*` 工具，技能目录里出现 `novel`；
   - 写一章看落点是不是 `06-正文/第001章 章名.md`。

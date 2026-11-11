@@ -37,8 +37,8 @@ test('REST 并发双存同一章：真 backend 上 3 组全 2xx，版本单调�
             const res = { statusCode: 0, body: '', headers: {}, setHeader(k, v) { this.headers[k] = v; }, end(s) { this.body = s ?? ''; this.ended = true; }, writeHead(code) { this.statusCode = code; } };
             const req = {
                 method: 'POST',
-                url: `/api/novel-forge/projects/${encodeURIComponent('竞态书')}/chapters/1`,
-                headers: { host: 'localhost:3080', 'content-type': 'application/json', 'x-dsh-novel-forge': '1' },
+                url: `/api/dsh-web-novel/projects/${encodeURIComponent('竞态书')}/chapters/1`,
+                headers: { host: 'localhost:3080', 'content-type': 'application/json', 'x-dsh-web-novel': '1' },
                 on(ev, fn) {
                     if (ev === 'data') setImmediate(() => fn(Buffer.from(JSON.stringify(body))));
                     if (ev === 'end') setImmediate(() => setImmediate(fn));

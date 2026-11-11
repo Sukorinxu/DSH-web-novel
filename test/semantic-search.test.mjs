@@ -70,7 +70,7 @@ before(async () => {
     if (!hasSdk) return;
     ({ apply } = await import('../lib/index.js'));
 
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-semantic-'));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-semantic-'));
     const backend = {
         async resolve(p, opts) {
             const abs = path.isAbsolute(p) ? p : path.join(opts?.cwd ?? root, p);

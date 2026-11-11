@@ -1,4 +1,4 @@
-# AGENTS.md — dsh-novel-forge 开发约定
+# AGENTS.md — dsh-web-novel 开发约定
 
 ## 项目定位
 
@@ -52,7 +52,7 @@ DSH（DeepSeek Harness）小说创作插件。设计主线：**代码强制 > �
 9. **入口只用右侧栏一条路线**（0.5.0 定）：走官方三步契约 ——
    ① `ctx.sidebarRightTabs.register(definition)`、② `ctx.slots.register({ name: 'sidebar.right.pane.tab', key: <id>, inject })`、
    ③ `ctx.sidebarRight.openTab(<kind>)`。**缺第③步 tab 永远不出现且不报错**。
-   左侧栏 DOM 注入路线已删除，不得两条路线并存（`data-dsh-novel-forge-entry` /
+   左侧栏 DOM 注入路线已删除，不得两条路线并存（`data-dsh-web-novel-entry` /
    `sidebarCol` / `MutationObserver` 在产物里出现即为回归，测试有反向断言）。
    `openTab` 在 seat 挂载前会抛错 ⇒ 必须延迟 + 重试（见 `src/client/forge-tab.js`）。
 10. **项目跟会话走**：`novel.json.sessions` 是「拥有这本书的会话」集合，判据一律走
@@ -170,9 +170,9 @@ npm test            # node --test test/（纯逻辑单测 + 假 fs 冒烟 + head
    （`writeText(..., 'replace')`，历史交给书目录 git），回执在缺 `.git` 时给可见 warning。
    **不要**在 git 模式下恢复 vK 副本或备份目录（技能纪律禁止目录复制式备份）。
 3. **agent 预设 = bundle patch 声明**：dsh 0.2+ 只认 `cordis.patch.yml` 里的
-   `@deepseek-ai/dsh-agent-preset` 行（`preset-novel-forge`）；`~/.dsh/.agent-presets/` 旧目录已无人
+   `@deepseek-ai/dsh-agent-preset` 行（`preset-dsh-web-novel`）；`~/.dsh/.agent-presets/` 旧目录已无人
    读取，`lib/preset-deploy.js` 仅保留老宿主兼容。`cordis.patch.yml` **由
-   `scripts/build-fusion-patch.mjs` 生成**（源：`lib/preset/novel-forge/agent.cordis.yml` +
+   `scripts/build-fusion-patch.mjs` 生成**（源：`lib/preset/dsh-web-novel/agent.cordis.yml` +
    `preset.yml`），改源后必须重跑生成器；`test/fusion-layout.test.mjs` 有漂移护栏。
 4. **双轨门禁**：写章轨（插件机审/内容门禁/细纲契约，落盘前零 token 拦截）与定稿轨
    （fiction-suite 的 Python 脚本，预设里由 `tool-pwsh` 执行）**并列汇报、不互相换算**。插件内
@@ -184,5 +184,5 @@ npm test            # node --test test/（纯逻辑单测 + 假 fs 冒烟 + head
    `node test/<file>.test.mjs`（沙箱里 `node --test` 的 child spawn 会被拒）；跑完
    `node scripts/setup-test-stubs.mjs --remove` 卸载。
    ⚠️ **垫片绝不能留在插件包的 node_modules 里**：profile 用 `link:` 引用本仓库时，插件自己的
-   node_modules 优先于宿主解析，留着垫片等于用替身跑真机（安装后会看到 `include:dsh-novel-forge`）。
+   node_modules 优先于宿主解析，留着垫片等于用替身跑真机（安装后会看到 `include:dsh-web-novel`）。
    垫片源码在 `test/stubs/` 入库（package.json 的 `files` 不含 test/，不进发行面），node_modules 被 gitignore。

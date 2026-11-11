@@ -3,7 +3,7 @@
 // 为什么要有 H5：右侧栏 React 面板在长列表/宽屏浮层下重渲染有卡顿感；
 // H5 版是**零依赖单文件网页**（lib/h5-page.js，宿主 Route GET /h5 直接吐出 HTML），
 // 放 iframe 里跑：样式/脚本与宿主 React 树彻底隔离，滚动、字体、主题都按 H5 自己设计。
-// 数据不走任何新通道：页面内 fetch 仍带 fence 头打 /api/novel-forge/*（复用它既有的门禁与权限）。
+// 数据不走任何新通道：页面内 fetch 仍带 fence 头打 /api/dsh-web-novel/*（复用它既有的门禁与权限）。
 //
 // 分工：浮层只负责「壳」（标题 / 刷新 / 新窗口 / 关闭），H5 页面自己管内部导航。
 import { h } from '../react.js';
@@ -20,7 +20,7 @@ function h5Src(state) {
 	const parts = ['embed=1'];
 	if (ov.book) parts.push(`book=${encodeURIComponent(ov.book)}`);
 	if (state.sessionId) parts.push(`session=${encodeURIComponent(state.sessionId)}`);
-	return `/api/novel-forge/h5?${parts.join('&')}`;
+	return `/api/dsh-web-novel/h5?${parts.join('&')}`;
 }
 
 export function H5Overlay({ state: s }) {

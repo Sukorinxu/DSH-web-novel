@@ -32,10 +32,10 @@ import { H5Overlay } from './views/h5-overlay.js';
 
 // 版本号：必须与 package.json 的 version 一致。
 // build-client.mjs 会把它与 package.json 对账，不一致直接构建失败（防发行漂移）。
-const PLUGIN_VERSION = '1.15.1';
+const PLUGIN_VERSION = '1.16.0';
 
 // 供视图头部徽标读取 —— 让视图层不必反向 import 入口（避免循环依赖）。
-window.__NOVEL_FORGE_VERSION__ = PLUGIN_VERSION;
+window.__DSH_WEB_NOVEL_VERSION__ = PLUGIN_VERSION;
 
 /**
  * cordis 服务注入（浏览器侧）：
@@ -53,7 +53,7 @@ const inject = ['slots', 'sidebarRightTabs', 'sidebarRight', 'sessions'];
 function apply(ctx) {
 	// 分诊日志：**没有这一行**就说明 apply 压根没被调用 ——
 	// 问题在加载链路（没构建 / 没重启 dsh），而不在本文件。
-	console.info('[novel-forge] client apply v' + PLUGIN_VERSION + ' — 注册右侧栏 tab');
+	console.info('[dsh-web-novel] client apply v' + PLUGIN_VERSION + ' — 注册右侧栏 tab');
 
 	// ① 类型 + ② 内容 seat（forge-tab.js 的 registerForgeTab）
 	// 包装一层：把 sessions 服务的「当前会话」读取器递给面板 —— slot inject 的
@@ -68,7 +68,7 @@ function apply(ctx) {
 			openSession: (id) => ctx.uiWorkspace?.openSession?.(id),
 		}));
 	} catch (error) {
-		console.error('[novel-forge] 右侧栏 tab 注册失败（可从右侧栏 guide 页手动进入）', error);
+		console.error('[dsh-web-novel] 右侧栏 tab 注册失败（可从右侧栏 guide 页手动进入）', error);
 	}
 
 	// ③ 打开：造神是右侧栏**常驻独立 tab** —— 会话里有没有项目都打开。
@@ -94,7 +94,7 @@ function apply(ctx) {
 				disposed = true;
 				if (typeof openedByAuto === 'function') openedByAuto();
 			},
-				'dsh-novel-forge: 自动打开造神 tab');
+				'dsh-web-novel: 自动打开造神 tab');
 		}
 		const gate = (typeof fetch === 'function')
 			? apiFetch('/panel-config', { timeoutMs: 2000 }).then(
@@ -108,11 +108,11 @@ function apply(ctx) {
 				// 由上方 effect 登记的清理函数在卸载时调用。
 				openedByAuto = openForgeTab(ctx);
 			} catch (error) {
-				console.warn('[novel-forge] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"造神"）', error);
+				console.warn('[dsh-web-novel] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"造神"）', error);
 			}
 		}, () => {});
 	} catch (error) {
-		console.warn('[novel-forge] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"造神"）', error);
+		console.warn('[dsh-web-novel] 独立打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入（"造神"）', error);
 	}
 
 	// 保底开关：自动打开失败时，控制台敲一行即可打开；

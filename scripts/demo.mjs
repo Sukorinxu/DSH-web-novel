@@ -19,7 +19,7 @@ const say = (title, lines) => {
     for (const l of lines) console.log(`  ${l}`);
 };
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-demo-'));
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-demo-'));
 const backend = {
     async resolve(p, opts) {
         const abs = path.isAbsolute(p) ? p : path.join(opts?.cwd ?? root, p);

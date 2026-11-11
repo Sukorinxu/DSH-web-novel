@@ -15,8 +15,8 @@ import fs from 'node:fs';
 import { createDom, loadClient, makeCtx } from './helpers/dom.mjs';
 
 const BUNDLE = new URL('../lib/client.js', import.meta.url);
-const TAB_ID = 'dsh-novel-forge';
-const TAB_KIND = 'novel-forge';
+const TAB_ID = 'dsh-web-novel';
+const TAB_KIND = 'dsh-web-novel';
 
 /** 装一次 client bundle + 一个 ctx，并跑 apply()。 */
 function boot(ctxOpts = {}, clientOpts = {}) {
@@ -70,7 +70,7 @@ function scriptedFetch(sequence, opts = {}) {
 
 test('加载契约：__ModuleLoader__ id 与包名一致，导出 { inject, apply }', () => {
     const { mod } = boot();
-    assert.equal(mod.id, 'dsh-novel-forge', 'load id 必须等于插件名');
+    assert.equal(mod.id, 'dsh-web-novel', 'load id 必须等于插件名');
     assert.equal(typeof mod.exports.apply, 'function', '必须导出 apply(ctx)');
     assert.deepEqual(Array.from(mod.exports.inject),
         ['slots', 'sidebarRightTabs', 'sidebarRight', 'sessions'],
@@ -313,9 +313,9 @@ test('★ 面板列表请求带会话：GET /projects?session=<id>', async () =>
     await controller.refreshProjects();
 
     const urls = seq.requests.map((r) => r.url);
-    assert.ok(urls.some((u) => u === '/api/novel-forge/projects?session=s1'),
+    assert.ok(urls.some((u) => u === '/api/dsh-web-novel/projects?session=s1'),
         `★ 列表必须按会话过滤（请求：${urls.join(' , ')}）`);
-    assert.ok(urls.some((u) => u === '/api/novel-forge/projects?scope=unclaimed'),
+    assert.ok(urls.some((u) => u === '/api/dsh-web-novel/projects?scope=unclaimed'),
         '未归属的旧书要单独查一份（给认领入口）');
     assert.equal(controller.state.projects.length, 1, '响应要落到 state.projects');
 });
@@ -424,7 +424,7 @@ test('★ 书作用域请求统一带 session：apiFetch 收口，目录/正文/
     // 「书卡显示 A 拷贝、阅读器读到 B 拷贝」就是漏在章节目录/阅读器/保存上）。
     // 以后新加 /projects/<书>/… 端点不必再补参数，也不必再补用例——它自动在护栏内。
     const shu = encodeURIComponent('书');
-    const BASE = '/api/novel-forge';
+    const BASE = '/api/dsh-web-novel';
     const seen = [];
     const value = (v) => Promise.resolve({ json: () => Promise.resolve({ ok: true, value: v }) });
     const fetch = (url, init) => {
@@ -434,7 +434,7 @@ test('★ 书作用域请求统一带 session：apiFetch 收口，目录/正文/
         if (bare === `${BASE}/projects/${shu}/chars`) {
             return value({ charMin: 2500, charMax: 3500, charSource: 'custom', charLimits: '2500-3500' });
         }
-        if (/^\/api\/novel-forge\/projects\/[^/]+\/chapters\/\d+$/.test(u)) return value('夜色像墨');
+        if (/^\/api\/dsh-web-novel\/projects\/[^/]+\/chapters\/\d+$/.test(u)) return value('夜色像墨');
         if (bare === `${BASE}/projects/${shu}/chapters`) return value([]);
         if (bare === `${BASE}/projects/${shu}/elements`) return value({});
         if (bare === `${BASE}/projects/${shu}/proposals`) return value({ proposals: [] });
@@ -622,7 +622,7 @@ test('拿不到会话 id 时降级：请求不带 session（显示全部，不�
 
     await controller.refreshProjects();
 
-    assert.ok(seq.requests.some((r) => r.url === '/api/novel-forge/projects'),
+    assert.ok(seq.requests.some((r) => r.url === '/api/dsh-web-novel/projects'),
         '无会话 id 时退化成全量查询（面板顶部会提示「全部项目」）');
 });
 
@@ -1111,7 +1111,7 @@ test('构建链：四视图是独立源码且被打进产物', () => {
 
 test('★ 入口路线唯一：左侧栏 DOM 注入的痕迹必须退场（不许两条路线并存）', () => {
     const code = fs.readFileSync(BUNDLE, 'utf8');
-    for (const gone of ['data-dsh-novel-forge-entry', 'newSession', 'sidebarCol', 'MutationObserver']) {
+    for (const gone of ['data-dsh-web-novel-entry', 'newSession', 'sidebarCol', 'MutationObserver']) {
         assert.ok(!code.includes(gone),
             `★ 产物里还有「${gone}」——左侧栏路线（DOM 注入 + 自愈观察者）必须删干净，否则两条入口同时存在`);
     }
@@ -1330,12 +1330,12 @@ test('★ 陈旧响应守卫：快速连开两本书，慢到的旧书响应不�
     // match 必须用编码后的书名；openProject 的 detail 请求带 ?session=（0.15.1 疲劳横幅），
     // respond 的子串兜底能命中；章请求不带 session。
     const yi = encodeURIComponent('乙');
-    dfr.respond(`/api/novel-forge/projects/${yi}/chapters/1`, '乙的第一章');
-    dfr.respond(`/api/novel-forge/projects/${yi}`, { title: '乙书' });
+    dfr.respond(`/api/dsh-web-novel/projects/${yi}/chapters/1`, '乙的第一章');
+    dfr.respond(`/api/dsh-web-novel/projects/${yi}`, { title: '乙书' });
     await dfr.settle(); // 第一波响应落地后，openProject 才会发目录/要素/提案三连
-    dfr.respond(`/api/novel-forge/projects/${yi}/chapters`, []);
-    dfr.respond(`/api/novel-forge/projects/${yi}/elements`, {});
-    dfr.respond(`/api/novel-forge/projects/${yi}/proposals`, { proposals: [] });
+    dfr.respond(`/api/dsh-web-novel/projects/${yi}/chapters`, []);
+    dfr.respond(`/api/dsh-web-novel/projects/${yi}/elements`, {});
+    dfr.respond(`/api/dsh-web-novel/projects/${yi}/proposals`, { proposals: [] });
     await p2;
     assert.equal(controller.state.selected, '乙');
     assert.equal(controller.state.detail?.title, '乙书');
@@ -1343,8 +1343,8 @@ test('★ 陈旧响应守卫：快速连开两本书，慢到的旧书响应不�
 
     // 甲的响应现在才到——必须整体被丢弃（detail 与 draft 都不许串台）
     const jia = encodeURIComponent('甲');
-    dfr.respond(`/api/novel-forge/projects/${jia}/chapters/1`, '甲的第一章');
-    dfr.respond(`/api/novel-forge/projects/${jia}`, { title: '甲书' });
+    dfr.respond(`/api/dsh-web-novel/projects/${jia}/chapters/1`, '甲的第一章');
+    dfr.respond(`/api/dsh-web-novel/projects/${jia}`, { title: '甲书' });
     await p1;
 
     assert.equal(controller.state.selected, '乙', 'selected 不被慢响应拉回');
@@ -1368,7 +1368,7 @@ test('★ 陈旧响应守卫：快速连点两章，后点的章必须赢（draf
     const controller = mod.exports.__internals.createForgeController({ sessionId: 's1' });
 
     const p = controller.handleAction('open', { dataset: { id: '书' } });
-    dfr.respond(`/api/novel-forge/projects/${shu}/chapters/1`, '第一章正文');
+    dfr.respond(`/api/dsh-web-novel/projects/${shu}/chapters/1`, '第一章正文');
     await p;
     assert.equal(controller.state.draft, '第一章正文');
 
@@ -1386,12 +1386,12 @@ test('★ 陈旧响应守卫：快速连点两章，后点的章必须赢（draf
     input.dispatch('input');
     await dfr.settle();
 
-    dfr.respond(`/api/novel-forge/projects/${shu}/chapters/3`, '第三章正文'); // 慢到的旧请求
+    dfr.respond(`/api/dsh-web-novel/projects/${shu}/chapters/3`, '第三章正文'); // 慢到的旧请求
     await dfr.settle();
     assert.equal(controller.state.draft, '第一章正文', '第 3 章响应到达时 chapterNo 已是 2：不得覆盖');
     assert.equal(controller.state.chapterNo, 2);
 
-    dfr.respond(`/api/novel-forge/projects/${shu}/chapters/2`, '第二章正文'); // 后点的章后回
+    dfr.respond(`/api/dsh-web-novel/projects/${shu}/chapters/2`, '第二章正文'); // 后点的章后回
     await dfr.settle();
     assert.equal(controller.state.draft, '第二章正文', '★ 后点的章必须赢——draft 与 chapterNo 同章，保存才不会写错章');
     assert.equal(controller.state.chapterNo, 2);
@@ -1636,8 +1636,8 @@ test('★ 会话过滤为空但全量有书：自动回落显示全部并标记 
 
     await controller.refreshProjects();
 
-    assert.ok(calls.includes('/api/novel-forge/projects?session=slot-side-id'), '先按会话过滤查一次');
-    assert.ok(calls.some((u) => u === '/api/novel-forge/projects'), '★ 过滤为空要补一次全量');
+    assert.ok(calls.includes('/api/dsh-web-novel/projects?session=slot-side-id'), '先按会话过滤查一次');
+    assert.ok(calls.some((u) => u === '/api/dsh-web-novel/projects'), '★ 过滤为空要补一次全量');
     assert.equal(controller.state.projects.length, 1, '回落后的全量书目要落到 state.projects');
     assert.equal(controller.state.sessionFallback, true, '★ 标记回落，视图据此显示说明条');
 });
@@ -1655,7 +1655,7 @@ test('★ 会话过滤非空：不回落、sessionFallback=false（不多发全�
     await controller.refreshProjects();
 
     assert.equal(controller.state.sessionFallback, false);
-    assert.equal(calls.filter((u) => u === '/api/novel-forge/projects').length, 0,
+    assert.equal(calls.filter((u) => u === '/api/dsh-web-novel/projects').length, 0,
         '过滤有结果就不该再打全量');
 });
 
@@ -1689,7 +1689,7 @@ test('★ resolveSessionId 提供真 id：列表请求按真 id 过滤，state.s
 
     await controller.refreshProjects();
     const urls = calls.map((c) => c.url).join(' , ');
-    assert.ok(calls.some((c) => c.url === '/api/novel-forge/projects?session=session-real-1'),
+    assert.ok(calls.some((c) => c.url === '/api/dsh-web-novel/projects?session=session-real-1'),
         '列表要按真会话 id 过滤（请求：' + urls + '）');
     assert.equal(controller.state.sessionId, 'session-real-1', 'state 里也换成真 id');
 });

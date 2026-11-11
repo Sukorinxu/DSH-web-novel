@@ -95,7 +95,7 @@ export function startForgeAutoOpen(ctx, opts = {}) {
 			const books = await fetchProjects(sessionId);
 			if (!stopped && !opened.has(sessionId) && Array.isArray(books) && books.length > 0) {
 				opened.add(sessionId);
-				log.info(`[novel-forge] 本会话有 ${books.length} 个项目 → 打开右侧栏 tab`);
+				log.info(`[dsh-web-novel] 本会话有 ${books.length} 个项目 → 打开右侧栏 tab`);
 				openTab(ctx);
 			}
 		} catch {

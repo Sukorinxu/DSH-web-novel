@@ -18,7 +18,7 @@ let createNodeFsBackend;
 before(async () => {
     if (!hasSdk) return;
     ({ buildStandaloneTools, createNodeFsBackend } = await import('../lib/mcp-standalone.js'));
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-mcp-'));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-mcp-'));
     standalone = await buildStandaloneTools(root);
 });
 
@@ -48,8 +48,8 @@ test('standalone: 后端 containment——越界 resolve 拒绝', () => {
 
 test('standalone: 符号链接逃逸被拒（realpath containment）', async () => {
     if (!hasSdk) return;
-    const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-link-'));
-    const outside = path.join(os.tmpdir(), `novel-forge-outside-${Date.now()}.txt`);
+    const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-link-'));
+    const outside = path.join(os.tmpdir(), `dsh-web-novel-outside-${Date.now()}.txt`);
     fs.writeFileSync(outside, 'secret');
     const link = path.join(ws, 'leak.txt');
     let symlinkOk = true;
@@ -181,9 +181,9 @@ test('standalone: toInputSchema 兼容旧「参数名 → spec」形状（宿主
 
 test('stdio server: initialize → tools/list → tools/call 全链', async () => {
     if (!hasSdk) return;
-    const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-mcp-ws-'));
+    const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-mcp-ws-'));
     const child = spawn(process.execPath, [path.join(import.meta.dirname, '..', 'mcp', 'server.mjs')], {
-        env: { ...process.env, NOVEL_FORGE_ROOT: ws },
+        env: { ...process.env, DSH_WEB_NOVEL_ROOT: ws },
         stdio: ['pipe', 'pipe', 'pipe'],
     });
     const pending = new Map();
@@ -212,7 +212,7 @@ test('stdio server: initialize → tools/list → tools/call 全链', async () =
 
     try {
         const init = await rpc('initialize', { protocolVersion: '2024-11-05', capabilities: {} });
-        assert.equal(init.result.serverInfo.name, 'dsh-novel-forge');
+        assert.equal(init.result.serverInfo.name, 'dsh-web-novel');
 
         const listed = await rpc('tools/list', {});
         assert.equal(listed.result.tools.length, 24);

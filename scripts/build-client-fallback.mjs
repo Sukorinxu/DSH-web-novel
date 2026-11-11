@@ -170,7 +170,7 @@ window.__ModuleLoader__.load({
 				return ext;
 			}
 			var f = __factories[key];
-			if (typeof f !== "function") throw new Error("[dsh-novel-forge] 模块缺失: " + key);
+			if (typeof f !== "function") throw new Error("[dsh-web-novel] 模块缺失: " + key);
 			var moduleExports = {};
 			__cache[key] = moduleExports;
 			var produced = f(__m, moduleExports);

@@ -46,7 +46,7 @@ const ForgeBoundary = typeof Component === 'function'
 	? class extends Component {
 		constructor(props) { super(props); this.state = { error: null }; }
 		static getDerivedStateFromError(error) { return { error }; }
-		componentDidCatch(error) { console.error('[novel-forge] 面板渲染失败：', error); }
+		componentDidCatch(error) { console.error('[dsh-web-novel] 面板渲染失败：', error); }
 		render() {
 			if (this.state.error) {
 				return h('div', { style: { padding: '16px', color: color.danger, fontSize: '12.5px', lineHeight: 1.7, whiteSpace: 'pre-wrap' } },
@@ -76,7 +76,7 @@ export function createForgeController({ sessionId = null, resolveSessionId = nul
 	state.sessionId = sessionId ?? null;
 
 	const notify = () => {
-		try { onChange(); } catch (error) { console.error('[novel-forge] 面板重渲染失败：', error); }
+		try { onChange(); } catch (error) { console.error('[dsh-web-novel] 面板重渲染失败：', error); }
 	};
 
 	/** 会话 id 校正：slot inject 的标识可能与真 agent 会话 id 不同源（0.13.2 真机实锤：
@@ -200,7 +200,7 @@ function panelH5Src(s) {
 	const parts = ['embed=1'];
 	if (s.selected) parts.push(`book=${encodeURIComponent(s.selected)}`);
 	if (s.sessionId) parts.push(`session=${encodeURIComponent(s.sessionId)}`);
-	return `/api/novel-forge/h5?${parts.join('&')}`;
+	return `/api/dsh-web-novel/h5?${parts.join('&')}`;
 }
 
 /**
@@ -303,7 +303,7 @@ export function ForgePanel(props) {
 			h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
 				h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm } },
 					h('span', { style: titleStyle }, '造神'),
-					h('span', { style: chip() }, 'v' + (window.__NOVEL_FORGE_VERSION__ || '?')),
+					h('span', { style: chip() }, 'v' + (window.__DSH_WEB_NOVEL_VERSION__ || '?')),
 				),
 				h('div', { style: subtitleStyle }, panelSubtitle(s)),
 			),

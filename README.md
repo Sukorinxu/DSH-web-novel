@@ -1,8 +1,8 @@
-# dsh-novel-forge · 造神
+# DSH-web-novel · 造神
 
 > 中文文档 ｜ [English](./README.en.md)
 
-![release](https://img.shields.io/github/v/release/huangziyuan-general/dsh-novel-forge) ![license](https://img.shields.io/github/license/huangziyuan-general/dsh-novel-forge) [![tests](https://img.shields.io/github/actions/workflow/status/huangziyuan-general/dsh-novel-forge/ci.yml?branch=main&label=tests)](https://github.com/huangziyuan-general/dsh-novel-forge/actions/workflows/ci.yml)
+![release](https://img.shields.io/github/v/release/Sukorinxu/DSH-web-novel) ![license](https://img.shields.io/github/license/Sukorinxu/DSH-web-novel) [![tests](https://img.shields.io/github/actions/workflow/status/Sukorinxu/DSH-web-novel/ci.yml?branch=main&label=tests)](https://github.com/Sukorinxu/DSH-web-novel/actions/workflows/ci.yml)
 
 DeepSeek Harness（DSH）的中文长篇写作插件。它不是「提示词合集」，而是把**一致性、门禁、审计**做进工具层与数据层：模型负责动笔，插件负责把写坏、写歪、写穿的地方拦在落盘之前。
 
@@ -24,11 +24,11 @@ DeepSeek Harness（DSH）的中文长篇写作插件。它不是「提示词合�
 2. **模型无法自批提案**：修订提案模型只能登记、不能应用——「应用」是面板里用户的主权动作（模型侧没有 apply 工具）；细纲批准记录批准通道，看板统计「工具自批占比」（真机实证某连载本曾 168/168 全自批，正是大纲漂移的第一缺口）。
 3. **审计零 token**：机审、去 AI 味扫描、平台审稿、一致性校验、账本时点推演全部是纯本地计算——逐章审计成本为 0，数字不经过模型之手。
 
-[![Star History Chart](https://api.star-history.com/svg?repos=huangziyuan-general/dsh-novel-forge&type=Date)](https://star-history.com/#huangziyuan-general/dsh-novel-forge&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Sukorinxu/DSH-web-novel&type=Date)](https://star-history.com/#Sukorinxu/DSH-web-novel&Date)
 
 ## FUSION 融合版（本仓库改造：引擎 × 用户技能）
 
-本仓库是 `dsh-novel-forge` 的本地改造版，把插件定位成**机械引擎**，把创作方法论交给用户自己的
+本仓库是「造神」的本地改造版，把插件定位成**机械引擎**，把创作方法论交给用户自己的
 `fiction-suite` 技能（选题/赛道/大纲/节奏/去 AI 味/语言指纹/台账/平台口径与**全部阈值**）。
 三个开关与一条纪律：
 
@@ -36,7 +36,7 @@ DeepSeek Harness（DSH）的中文长篇写作插件。它不是「提示词合�
 | --- | --- | --- |
 | `layout` | `fiction-suite` | 人类文档按技能落盘规范：`06-正文/第001章 章名.md`、`04-细纲/第001章.md`、`03-分卷大纲/全书大纲.md`、`05-角色语言指纹/<角色名>.md`、`02-设定圣经/故事承诺书.md`；**机器状态**（`novel.json`、`账本/`、`设定/*.json`、`.novel/`）两种布局一致、不动。`layout: forge` 回到插件原生目录。 |
 | `versioning` | `auto`（→ `git`） | fiction-suite 布局下同一章正文**单文件原地覆盖**，历史交给书目录 git（每章定稿/每次台账变更单独 commit）；`versions` 保留 `第N章-标题-vK.md` 永不覆盖。回执检测到书目录没有 `.git` 会给可见警告。 |
-| 预设交付 | bundle patch 声明 | dsh 0.2+ 的 agent 预设是 `cordis.patch.yml` 里的 `@deepseek-ai/dsh-agent-preset` 声明行（`preset-novel-forge`）。`~/.dsh/.agent-presets/` 旧目录**已无人读取**，仅老宿主兼容。 |
+| 预设交付 | bundle patch 声明 | dsh 0.2+ 的 agent 预设是 `cordis.patch.yml` 里的 `@deepseek-ai/dsh-agent-preset` 声明行（`preset-dsh-web-novel`）。`~/.dsh/.agent-presets/` 旧目录**已无人读取**，仅老宿主兼容。 |
 | 门禁双轨 | 写章轨 + 定稿轨 | 写章：插件机审/内容门禁/细纲契约（零 token，落盘前拦）；定稿：用 `tool-pwsh` 跑 fiction-suite 的 `novel_audit.py --kind 定稿` 等脚本，**实际 stdout 与退出码原样进交付**；两轨数字并列、不互相换算。 |
 | 方法论路由 | `fiction-suite` 技能 | 插件的 `novel` 技能只写机械流程与路由；阈值只认 `spec-quality-gates.md`、台账只认 `spec-ledger.md`、去 AI 味只认 `spec-de-ai.md`，禁止凭记忆。 |
 
@@ -78,7 +78,7 @@ H5 实机渲染（以下为**虚构示例数据**：示例书《长夜行（示�
 > 以上是 H5 的**真实渲染**（headless Chromium；`node scripts/shoot-h5.mjs` 可复现，示例数据已脱敏）。
 
 > 看完了演示觉得有用？这就是它每天在你写长篇时替你挡下的事。顺手点个 ⭐ 让更多人看见：
-> [github.com/huangziyuan-general/dsh-novel-forge](https://github.com/huangziyuan-general/dsh-novel-forge)
+> [github.com/Sukorinxu/DSH-web-novel](https://github.com/Sukorinxu/DSH-web-novel)
 
 ## AI 写作通病与硬约束
 
@@ -118,21 +118,19 @@ AI 长篇写作的通病不是玄学，每一个都有对应的工程解法。�
 **第 1 步 · 安装插件**（任选其一）：
 
 ```bash
-# 从 npm（0.16.0 起已发布；安装量计入 dshmarket「Most installed」榜）
-dsh plugin --profile web add npm:dsh-novel-forge
 
 # 从 GitHub 公开仓库（⚠️ github: 简写经 pnpm 走 SSH——机器要配好 GitHub SSH key
 # 且 ~/.ssh/known_hosts 里有 github.com 主机指纹，否则更新报 Host key verification failed；
 # 没配 SSH 就用上面的 npm 源，公共仓库拉取无需任何凭据）
-dsh plugin --profile web add github:huangziyuan-general/dsh-novel-forge
+dsh plugin --profile web add github:Sukorinxu/DSH-web-novel
 
 # 本地开发（符号链接，改码即生效）
-dsh plugin --profile web add link:/path/to/dsh-novel-forge
+dsh plugin --profile web add link:/path/to/dsh-web-novel
 ```
 
 **第 2 步 · 重启 DSH web，然后浏览器硬刷新**（客户端 bundle 在进程启动时快照，不重启等于没装）。
 
-**第 3 步 · 验证安装**：右侧栏出现「🔨 造神」独立 tab；在会话里让模型「列出小说工具」，应能看到 24 个 `novel_*` 工具。agent 预设「造神」由本 bundle 的 `cordis.patch.yml` 声明（Loader 行 `preset-novel-forge`），新开会话时在预设列表选它即可；dsh 0.2+ 不再读取 `~/.dsh/.agent-presets/` 旧目录（插件仍兼容老宿主，`DSH_NOVEL_FORGE_REDEPLOY=1` 强制重铺、`DSH_NOVEL_FORGE_SKIP_DEPLOY=1` 关闭）。
+**第 3 步 · 验证安装**：右侧栏出现「📚 造神」独立 tab；在会话里让模型「列出小说工具」，应能看到 24 个 `novel_*` 工具。agent 预设「造神」由本 bundle 的 `cordis.patch.yml` 声明（Loader 行 `preset-dsh-web-novel`），新开会话时在预设列表选它即可；dsh 0.2+ 不再读取 `~/.dsh/.agent-presets/` 旧目录（插件仍兼容老宿主，`DSH_WEB_NOVEL_REDEPLOY=1` 强制重铺、`DSH_WEB_NOVEL_SKIP_DEPLOY=1` 关闭）。
 
 **第 4 步 · 建第一本书**：在会话里直接对模型说，例如：
 
@@ -271,16 +269,16 @@ novel_project init → novel_project phase（看九阶段看板，按提示补�
 ## MCP 双通道（宿主外复用）
 
 同一套 `novel_*` 工具（门禁/账本/审计/基线全在工具层）也可通过 stdio MCP 暴露给
-Claude Desktop / Cursor 等任意 MCP 客户端——工作区根取 `NOVEL_FORGE_ROOT`
+Claude Desktop / Cursor 等任意 MCP 客户端——工作区根取 `DSH_WEB_NOVEL_ROOT`
 （缺省为进程 cwd），一本小说 = 工作区里的一个目录：
 
 ```json
 {
   "mcpServers": {
-    "novel-forge": {
+    "dsh-web-novel": {
       "command": "node",
-      "args": ["/path/to/dsh-novel-forge/mcp/server.mjs"],
-      "env": { "NOVEL_FORGE_ROOT": "/你的小说工作区" }
+      "args": ["/path/to/dsh-web-novel/mcp/server.mjs"],
+      "env": { "DSH_WEB_NOVEL_ROOT": "/你的小说工作区" }
     }
   }
 }
@@ -294,8 +292,8 @@ containment 与版本守卫语义（含 `readBytes` 字节原语——`.docx` �
 
 | 症状 | 处理 |
 | --- | --- |
-| 右侧栏没有「🔨 造神」tab | 重启 DSH web（bundle 进程启动时快照）→ 浏览器**硬刷新**。console 应有 `[novel-forge] client apply v…` |
-| 面板按钮点了没反应 | 先硬刷新；console 看 `[novel-forge]` 日志。开发者可跑 `npm run preview` 的按钮扫射定位 |
+| 右侧栏没有「📚 造神」tab | 重启 DSH web（bundle 进程启动时快照）→ 浏览器**硬刷新**。console 应有 `[dsh-web-novel] client apply v…` |
+| 面板按钮点了没反应 | 先硬刷新；console 看 `[dsh-web-novel]` 日志。开发者可跑 `npm run preview` 的按钮扫射定位 |
 | 润色/校对报 `503 引擎未就绪` | 当前 dsh 进程没有可用的模型服务：确认模型路由已配置、插件是最新构建并已重启生效 |
 | 润色/校对报 `NO_PARENT_AGENT` | 插件会先按「书归属会话」候选自动物化；仍失败时，到拥有这本书的会话里发一条消息（让会话 agent 驻留），再回面板重试 |
 | 润色报 `OUTPUT_TRUNCATED` | 模型输出被上限截断。保持 `engine.channels.*.maxTokens` 默认 0（继承宿主校准值），不要显式设小 |
@@ -324,7 +322,7 @@ npm test            # node --test 全量用例（纯逻辑单测 + 假 fs 全链
 node scripts/demo.mjs   # 端到端演示：init→细纲→写章→账本→扫描→提案 全流程
 
 # —— FUSION 改造专用 ——
-npm run build:patch # 由 lib/preset/novel-forge/{agent.cordis.yml,preset.yml} 重新生成 cordis.patch.yml（改预设后必跑）
+npm run build:patch # 由 lib/preset/dsh-web-novel/{agent.cordis.yml,preset.yml} 重新生成 cordis.patch.yml（改预设后必跑）
 npm run fusion:e2e   # 融合链路端到端：fiction-suite 布局落盘 + git 覆盖写 + 布局切换（独立通道，不装宿主也能跑）
 npm run test:stubs   # 挂载 test/stubs/ 的最小宿主 SDK 垫片（Config/defineTool/输出校验器），随后可直跑 node test/<file>.test.mjs
 npm run test:stubs:clean  # 卸载垫片——生产运行时必须保持未挂载（link: 安装时插件自己的 node_modules 优先于宿主解析）
@@ -335,7 +333,7 @@ npm run test:stubs:clean  # 卸载垫片——生产运行时必须保持未挂�
 
 ## 已知边界
 
-- **面板 REST 只限本机访问**（安全模型，2026-10-09 起）：API 靠两条浏览器不可伪造的防线——`x-dsh-novel-forge` fence 头挡普通跨域，`Host`/`Origin` 白名单（`localhost`/`127.0.0.1`/`[::1]`）挡 DNS rebinding。代价是**本机限定**：换端口没问题（端口不在校验范围），SSH 隧道没问题（Host 仍是 127.0.0.1），但若把 DSH web 暴露到局域网用别的机器访问，造神面板的 API 会 403（`FORBIDDEN_HOST`）。fence 对本机其他进程零防护——这是设计假设（威胁模型是浏览器里的恶意网页，不是本机进程）。需要自有域名时，插件配置 `allowedHosts` 可显式追加主机名（issue #7）：**默认空数组 = 行为与未配置前逐字相同**；只有显式配置才放宽，且不收通配符（通配符会把 DNS rebinding 防线整条拆掉，校验直接拒绝）。
+- **面板 REST 只限本机访问**（安全模型，2026-10-09 起）：API 靠两条浏览器不可伪造的防线——`x-dsh-web-novel` fence 头挡普通跨域，`Host`/`Origin` 白名单（`localhost`/`127.0.0.1`/`[::1]`）挡 DNS rebinding。代价是**本机限定**：换端口没问题（端口不在校验范围），SSH 隧道没问题（Host 仍是 127.0.0.1），但若把 DSH web 暴露到局域网用别的机器访问，造神面板的 API 会 403（`FORBIDDEN_HOST`）。fence 对本机其他进程零防护——这是设计假设（威胁模型是浏览器里的恶意网页，不是本机进程）。需要自有域名时，插件配置 `allowedHosts` 可显式追加主机名（issue #7）：**默认空数组 = 行为与未配置前逐字相同**；只有显式配置才放宽，且不收通配符（通配符会把 DNS rebinding 防线整条拆掉，校验直接拒绝）。
 - **导入素材先自查一遍**（提示注入）：`novel_import` / `novel_library` 吃进的外部文本会进检索索引与续写上下文，文本里内嵌的指令性文字可能操纵写作模型。既有缓解：检索语料硬编码隔离（外部素材永远进不了本书语料 `project` 桶）、全部写路径过工具门禁——最坏后果是内容污染，不是文件系统逃逸；但素材本身请先过目再导入。
 - 去 AI 味词库与阈值是**启发式**，只能抓显性病，不承诺"根治"——结构性指标（节奏方差/信息稀释）是它比纯词库强的地方。
 - `novel_audit` 只产出确定性证据，「模型审」在会话里进行；旁路引擎只服务内部工序（润色/校对/打标/起草），不改变「审计工具不调模型」这条线。

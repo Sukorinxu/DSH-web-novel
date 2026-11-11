@@ -110,7 +110,7 @@ test('cordis.patch.yml 与预设源同步（bundle patch 生成器漂移护栏�
     // 两者由 scripts/build-fusion-patch.mjs 机械同步，这里钉住「改了源没重生成」。
     assert.equal(patchIsCurrent(), true, '跑 node scripts/build-fusion-patch.mjs 重新生成 cordis.patch.yml');
     const text = renderPatch();
-    assert.match(text, /preset-novel-forge/);
+    assert.match(text, /preset-dsh-web-novel/);
     assert.match(text, /layout: fiction-suite/);
     assert.match(text, /versioning: auto/);
     // 预设声明必须包含工具清单（persona + 技能目录/skill 工具 + fs 检索 + ask_user + pwsh）

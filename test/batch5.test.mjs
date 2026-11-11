@@ -782,7 +782,7 @@ test('engine: 无 ctx.llm 时经 subagents 跑通——web profile 主路径（�
     // 0.13.2 第三轮：默认不设限（tokenCap=0 → agentOptions 不带 maxTokens，继承宿主默认）
     assert.deepEqual(calls[0].opts.agentOptions, { provider: 'p1', model: 'm1' });
     assert.ok(!('maxTokens' in calls[0].opts.agentOptions), '不设限时不该传 maxTokens');
-    assert.deepEqual(calls[0].opts.toolFilter, { allow: [] }, '纯文本任务不带工具');
+    assert.deepEqual(calls[0].opts.toolFilter, { allow: ['__dsh_web_novel_text_only__'] }, '纯文本任务只挂一个不存在的哨兵工具（空 allow 在宿主等于不设限）');
 });
 
 test('engine: 显式配置 channels.polish.maxTokens=0 也走继承宿主默认（0=不设限），不回落 base 值', async () => {
@@ -867,7 +867,7 @@ test('engine: ★ start() 缺 parent 的历史病灶三连——不传 session /
 });
 
 test('engine: subagents 只能经 ctx.get() 解析时也可用（cordis 作用域链形态，补六真机复诊）', async () => {
-    // 真机复诊：novel-forge 未在顶层 inject 声明 subagents 时，cordis 不会把服务
+    // 真机复诊：dsh-web-novel 未在顶层 inject 声明 subagents 时，cordis 不会把服务
     // 物化到插件 ctx 的 fiber store——属性访问落空，但作用域链 ctx.get() 仍能解析。
     // 探测必须双路都试，否则「服务在进程里存在（mnemon 能用）我却拿不到」。
     const calls = [];
@@ -1157,6 +1157,8 @@ test('batch-draft: 并发>1 时父锚定只发生一次（防多章并发 resume
     let anchorCalls = 0;
     const seenParents = [];
     const engine = {
+        // 关闭自动打标：它也会走同一个 engine.run，测试只统计起草调用
+        isAvailable() { return false; },
         // 收敛面替身：anchor 一次；run 必须收到预解析的 parent
         async anchor(_opts) { anchorCalls += 1; return { ok: true, parent }; },
         async run(_channel, { prompt, parent: p }) {

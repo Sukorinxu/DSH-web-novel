@@ -11,10 +11,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-process.env.NOVEL_FORGE_LAYOUT = 'fiction-suite';
-process.env.NOVEL_FORGE_VERSIONING = 'git';
+process.env.DSH_WEB_NOVEL_LAYOUT = 'fiction-suite';
+process.env.DSH_WEB_NOVEL_VERSIONING = 'git';
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-fusion-e2e-'));
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-fusion-e2e-'));
 const BOOK = '融合测试书';
 let failed = 0;
 const check = (label, ok, detail = '') => {

@@ -366,7 +366,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let polishMode = 'ok';
 const previewFetch = async (url, init) => {
   const u = new URL(url, location.href);
-  const p = u.pathname.replace(/^\\/api\\/novel-forge/, '');
+  const p = u.pathname.replace(/^\\/api\\/dsh-web-novel/, '');
   const q = u.searchParams;
   const json = (payload, status = 200) => ({ status, json: async () => payload });
 
@@ -494,13 +494,13 @@ const tour = {
 // 为什么要有它：事件代理的失效是**静默**的 —— action 名对不上、按钮被误标 disabled、
 // 处理器前置条件不满足提前 return，全都表现为「点了没反应」，且构建/单测一律绿灯
 // （单测覆盖控制器，覆盖不到「点击真的送达了吗」）。扫射用**真渲染 + 真事件代理**照出这些。
-// ⚠️ 属性名必须与 panel.js 的 PANEL_ATTR 一致（data-dsh-novel-forge-panel）。
+// ⚠️ 属性名必须与 panel.js 的 PANEL_ATTR 一致（data-dsh-web-novel-panel）。
 // 少了 dsh- 前缀会让这里恒返回 'NO-PANEL' —— 于是**每一次点击都被判成"无变化"**，
 // 扫射满屏假阳性（0.13.0 写这个功能时当场踩了）。所以拿不到面板根**直接抛错**，
 // 宁可炸掉也不要给一份看起来煞有介事的假报告。
 const panelRoot = () => {
-  const root = frame.querySelector('[data-dsh-novel-forge-panel]');
-  if (!root) throw new Error('扫射拿不到面板根 [data-dsh-novel-forge-panel] —— 面板没渲染或属性名写错了');
+  const root = frame.querySelector('[data-dsh-web-novel-panel]');
+  if (!root) throw new Error('扫射拿不到面板根 [data-dsh-web-novel-panel] —— 面板没渲染或属性名写错了');
   return root;
 };
 const panelSig = () => {

@@ -71,7 +71,7 @@ function makeWebProfile() {
     patch = patch.replace(/(id:\s*sandbox-policy[\s\S]*?)workspaceRoot:.*/m, `$1workspaceRoot: ${decoy}`);
     // ② 插件 config：workspaceRoot 指到 ws（spawn cwd=decoy ⇒ 写 ws 只有绑定根覆写才救得回来）；
     //    allowedHosts 带一个探测域名（issue #7 真接线：Host 白名单放行/拒绝走真 apply() 管道）
-    patch += `\n- id: dsh-novel-forge\n  config:\n    workspaceRoot: ${ws}\n    allowedHosts: ['forge.probe.example']\n`;
+    patch += `\n- id: dsh-web-novel\n  config:\n    workspaceRoot: ${ws}\n    allowedHosts: ['forge.probe.example']\n`;
     fs.writeFileSync(patchFile, patch);
 }
 
@@ -103,7 +103,7 @@ async function layerWeb() {
     console.log(`  容器就绪：${baseUrl}（进程 cwd=${decoy}，沙箱根钉死在 cwd，书的根=${ws}）`);
     check('容器启动并打出监听地址', true);
 
-    const FENCE = { 'x-dsh-novel-forge': '1' };
+    const FENCE = { 'x-dsh-web-novel': '1' };
     const req = async (method, p, { body, fence = true } = {}) => {
         const res = await fetch(baseUrl + p, {
             method,
@@ -114,7 +114,7 @@ async function layerWeb() {
         let json = null; try { json = JSON.parse(text); } catch { /* 保留原文 */ }
         return { status: res.status, json, text };
     };
-    const q = (s) => `/api/novel-forge/${s}`;
+    const q = (s) => `/api/dsh-web-novel/${s}`;
 
     try {
         // S1 mount + 自家 fence（不带头的 403 必须来自插件，不是宿主的 401）
@@ -133,7 +133,7 @@ async function layerWeb() {
         const reqHost = (host, p) => new Promise((resolve) => {
             const r = http.request({
                 hostname: '127.0.0.1', port: Number(probePort), path: p, method: 'GET',
-                headers: { Host: host, 'x-dsh-novel-forge': '1' },
+                headers: { Host: host, 'x-dsh-web-novel': '1' },
             }, (res) => {
                 let body = ''; res.on('data', (c) => { body += c; });
                 res.on('end', () => { let json = null; try { json = JSON.parse(body); } catch { /* 原文 */ } resolve({ status: res.statusCode, json, body }); });
@@ -214,7 +214,7 @@ async function layerWeb() {
             post.status === 200 && (post.json?.value ?? []).some((b) => b.name === '二号书'), `status=${post.status}`);
 
         // S9（软）插件的扫描根诊断行进了宿主 stdout：三源计数肉眼可查
-        const rootsLine = (buf.match(/\[novel-forge\] 扫描根[^\n]*/g) ?? []).pop();
+        const rootsLine = (buf.match(/\[dsh-web-novel\] 扫描根[^\n]*/g) ?? []).pop();
         soft('S9 扫描根诊断行', Boolean(rootsLine), rootsLine ? rootsLine.slice(0, 160) : '未在 stdout 捕获（可能被宿主日志层吞掉，不判负）');
 
         // S10 会话交接全自动链（0.16.1 后：prompt 直发 + 延迟归档 + 自动认领）——全是真宿主会话服务。
@@ -255,7 +255,7 @@ async function layerWeb() {
 async function layerMcp() {
     console.log('\n== MCP 层：真起 mcp/server.mjs（stdio JSON-RPC），真磁盘建书 ==');
     const child = spawn(process.execPath, [path.join(repoRoot, 'mcp/server.mjs')], {
-        cwd: repoRoot, env: { ...process.env, NOVEL_FORGE_ROOT: mcprs }, stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: repoRoot, env: { ...process.env, DSH_WEB_NOVEL_ROOT: mcprs }, stdio: ['pipe', 'pipe', 'pipe'],
     });
     let stderr = '';
     child.stderr.on('data', (d) => { stderr += d; });
@@ -374,7 +374,7 @@ async function layerMcp() {
 // 写进顶层 inject，而 headless profile 没有它们 ⇒ cordis 让整个插件永远 pending，
 // 20 个 novel_* 工具 + 面板在 headless 上整块消失：
 //   dsh: warning: 1 entry did not activate
-//   dsh-novel-forge (dsh-novel-forge): pending (waiting for services: sessionController, workspaceController)
+//   dsh-web-novel (dsh-web-novel): pending (waiting for services: sessionController, workspaceController)
 // 这里直接用**真实的 headless profile** 复现（不模拟缺席），修完必须两条都不再出现。
 // 模型那一发可能因余额报 402——与本层无关：mount 警告在服务调用之前就打了。
 async function layerMount() {
@@ -411,7 +411,7 @@ async function layerMount() {
     // 只判「本插件有没有被牵连」——别的条目因被删而 pending 是正常形态，不许断成
     // 「日志里一个 pending 都不许出现」（那会钉死宿主其它插件的可选依赖）。
     check('S11b 缺席控制器不再挂起主插件（本插件的 pending 行必须消失）',
-        !/dsh-novel-forge[^\n]*pending/i.test(all), noisy);
+        !/dsh-web-novel[^\n]*pending/i.test(all), noisy);
     soft('S11c 本层留痕（模型侧余额/鉴权故障与本层无关）', true,
         all.split('\n').filter((l) => /QUOTA|Balance|401|402/i.test(l)).slice(0, 1).join(' '));
 }

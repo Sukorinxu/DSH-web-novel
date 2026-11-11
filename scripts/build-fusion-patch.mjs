@@ -4,7 +4,7 @@
 // 为什么生成而不是手写：dsh 0.2+ 的 agent 预设是 **bundle patch 里的
 // `@deepseek-ai/dsh-agent-preset` 声明行**（$DSH_HOME/.agent-presets/ 旧目录已无人读取，
 // 见 editing-cordis-compositions 技能）。插件包的 cordis.patch.yml 是唯一能给 profile
-// 插入预设行的位置，而预设的插件清单与 `lib/preset/novel-forge/agent.cordis.yml`
+// 插入预设行的位置，而预设的插件清单与 `lib/preset/dsh-web-novel/agent.cordis.yml`
 // （legacy 宿主的部署源）必须同源——两份手抄必然漂移，所以这里由 agent.cordis.yml
 // + preset.yml 机械生成，`node test/fusion-layout.test.mjs` 里有漂移护栏。
 //
@@ -20,7 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const presetDir = path.join(root, 'lib', 'preset', 'novel-forge');
+const presetDir = path.join(root, 'lib', 'preset', 'dsh-web-novel');
 const outPath = path.join(root, 'cordis.patch.yml');
 
 /** 极简 frontmatter 式 key: value 解析（预设元数据只有这两三个标量字段）。 */
@@ -51,20 +51,20 @@ export function renderPatch() {
     const description = meta.description ?? '机械引擎 × fiction-suite 方法论';
     const order = Number.isInteger(Number(meta.order)) ? Number(meta.order) : 5;
 
-    return `# dsh-novel-forge bundle patch（FUSION 版：机械引擎 × fiction-suite 方法论）。
+    return `# dsh-web-novel bundle patch（FUSION 版：机械引擎 × fiction-suite 方法论）。
 #
 # 本文件由 scripts/build-fusion-patch.mjs 生成，不要手改——
-# 预设插件清单的唯一源是 lib/preset/novel-forge/agent.cordis.yml，
-# 显示名/描述/顺序的唯一源是 lib/preset/novel-forge/preset.yml。
+# 预设插件清单的唯一源是 lib/preset/dsh-web-novel/agent.cordis.yml，
+# 显示名/描述/顺序的唯一源是 lib/preset/dsh-web-novel/preset.yml。
 # 改完跑：node scripts/build-fusion-patch.mjs
 #
 # 两张行：
-#   ① dsh-novel-forge —— 插件本体（23 个 novel_* 工具 + 右侧栏面板 + novel 技能注册）；
-#   ② preset-novel-forge —— agent 预设声明（dsh 0.2+ 只认 bundle patch 声明；
+#   ① dsh-web-novel —— 插件本体（23 个 novel_* 工具 + 右侧栏面板 + novel 技能注册）；
+#   ② preset-dsh-web-novel —— agent 预设声明（dsh 0.2+ 只认 bundle patch 声明；
 #      $DSH_HOME/.agent-presets/ 旧目录已无人读取，preset-deploy 仅服务老宿主）。
 - insert:
-    - id: 'dsh-novel-forge'
-      name: 'dsh-novel-forge'
+    - id: 'dsh-web-novel'
+      name: 'dsh-web-novel'
       config:
         # 与 lib/index.js Config 默认值保持一致（起点标准 2000–4000）。
         # ⚠️ patch 里显式给的值会覆盖 schema default——0.13.1 曾在这里留了旧值
@@ -73,7 +73,7 @@ export function renderPatch() {
         # 同时在场，6000 会把「全书大纲」和「原著锚段」挤出预算（真机实测）；
         # 提到 9000 让长篇续写时的对齐材料进得来。
         minChapterChars: 2000
-        maxChapterChars: 4000
+        maxChapterChars: 5000
         contextBudgetChars: 9000
         scanTopK: 8
         repetitionWindow: 10
@@ -87,10 +87,10 @@ export function renderPatch() {
         skipPresetDeploy: true
 
     # ── agent 预设声明（插件清单逐行取自 agent.cordis.yml，机械缩进不漂移） ──
-    - id: 'preset-novel-forge'
+    - id: 'preset-dsh-web-novel'
       name: '@deepseek-ai/dsh-agent-preset'
       config:
-        id: 'novel-forge'
+        id: 'dsh-web-novel'
         name: "${name}"
         description: "${description}"
         order: ${order}

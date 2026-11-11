@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mcp/server.mjs — dsh-novel-forge 的 MCP 双通道入口（stdio，JSON-RPC 2.0）。
+// mcp/server.mjs — dsh-web-novel 的 MCP 双通道入口（stdio，JSON-RPC 2.0）。
 // 零依赖：宿主 peer 包（@deepseek-ai/dsh-tools / schemastery）缺席也能启动——
 // 输出校验退化为不校验、Config 走构造壳，工具本体照常（依赖口径见
 // lib/tools/define-tool.js 与 lib/mcp-standalone.js 的注释，两处都必须是动态导入）。
@@ -8,21 +8,21 @@
 //   Claude Desktop / Cursor 配置示例：
 //   {
 //     "mcpServers": {
-//       "novel-forge": {
+//       "dsh-web-novel": {
 //         "command": "node",
-//         "args": ["/path/to/dsh-novel-forge/mcp/server.mjs"],
-//         "env": { "NOVEL_FORGE_ROOT": "/你的小说工作区" }
+//         "args": ["/path/to/dsh-web-novel/mcp/server.mjs"],
+//         "env": { "DSH_WEB_NOVEL_ROOT": "/你的小说工作区" }
 //       }
 //     }
 //   }
-// 工作区根 = NOVEL_FORGE_ROOT 环境变量，缺省为进程 cwd。一本小说 = 工作区里的一个目录。
+// 工作区根 = DSH_WEB_NOVEL_ROOT 环境变量，缺省为进程 cwd。一本小说 = 工作区里的一个目录。
 import { buildStandaloneTools, toInputSchema } from '../lib/mcp-standalone.js';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
-const root = process.env.NOVEL_FORGE_ROOT ?? process.cwd();
+const root = process.env.DSH_WEB_NOVEL_ROOT ?? process.cwd();
 const { tools, call } = await buildStandaloneTools(root);
 
 const toolDefs = tools.map((t) => ({
@@ -69,7 +69,7 @@ function handleMessage(line) {
                 reply(id, {
                     protocolVersion: params?.protocolVersion ?? '2024-11-05',
                     capabilities: { tools: {} },
-                    serverInfo: { name: 'dsh-novel-forge', version },
+                    serverInfo: { name: 'dsh-web-novel', version },
                 });
                 return;
             case 'notifications/initialized':
@@ -106,4 +106,4 @@ function handleMessage(line) {
     }
 }
 
-process.stderr.write(`[dsh-novel-forge-mcp] ready: ${tools.length} tools, workspace=${root}\n`);
+process.stderr.write(`[dsh-web-novel-mcp] ready: ${tools.length} tools, workspace=${root}\n`);

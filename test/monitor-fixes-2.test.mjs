@@ -136,7 +136,7 @@ let exec;
 
 before(async () => {
     const { apply } = await import('../lib/index.js');
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-e51415-'));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-e51415-'));
     const backend = {
         async resolve(p, opts) {
             const abs = path.isAbsolute(p) ? p : path.join(opts?.cwd ?? root, p);

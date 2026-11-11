@@ -7,7 +7,7 @@
 // 用法（需要能启动浏览器的权限；Windows 沙箱里要 danger-full-access）：
 //   node scripts/shoot-h5.mjs <h5-url> <out-dir> [browser-exe]
 // 示例：
-//   node scripts/shoot-h5.mjs "http://127.0.0.1:10153/api/novel-forge/h5?book=示例·长夜行" assets/screenshots-h5
+//   node scripts/shoot-h5.mjs "http://127.0.0.1:10153/api/dsh-web-novel/h5?book=示例·长夜行" assets/screenshots-h5
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';

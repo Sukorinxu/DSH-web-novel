@@ -1,17 +1,17 @@
-# dsh-novel-forge bundle patch（FUSION 版：机械引擎 × fiction-suite 方法论）。
+# dsh-web-novel bundle patch（FUSION 版：机械引擎 × fiction-suite 方法论）。
 #
 # 本文件由 scripts/build-fusion-patch.mjs 生成，不要手改——
-# 预设插件清单的唯一源是 lib/preset/novel-forge/agent.cordis.yml，
-# 显示名/描述/顺序的唯一源是 lib/preset/novel-forge/preset.yml。
+# 预设插件清单的唯一源是 lib/preset/dsh-web-novel/agent.cordis.yml，
+# 显示名/描述/顺序的唯一源是 lib/preset/dsh-web-novel/preset.yml。
 # 改完跑：node scripts/build-fusion-patch.mjs
 #
 # 两张行：
-#   ① dsh-novel-forge —— 插件本体（23 个 novel_* 工具 + 右侧栏面板 + novel 技能注册）；
-#   ② preset-novel-forge —— agent 预设声明（dsh 0.2+ 只认 bundle patch 声明；
+#   ① dsh-web-novel —— 插件本体（23 个 novel_* 工具 + 右侧栏面板 + novel 技能注册）；
+#   ② preset-dsh-web-novel —— agent 预设声明（dsh 0.2+ 只认 bundle patch 声明；
 #      $DSH_HOME/.agent-presets/ 旧目录已无人读取，preset-deploy 仅服务老宿主）。
 - insert:
-    - id: 'dsh-novel-forge'
-      name: 'dsh-novel-forge'
+    - id: 'dsh-web-novel'
+      name: 'dsh-web-novel'
       config:
         # 与 lib/index.js Config 默认值保持一致（起点标准 2000–4000）。
         # ⚠️ patch 里显式给的值会覆盖 schema default——0.13.1 曾在这里留了旧值
@@ -20,7 +20,7 @@
         # 同时在场，6000 会把「全书大纲」和「原著锚段」挤出预算（真机实测）；
         # 提到 9000 让长篇续写时的对齐材料进得来。
         minChapterChars: 2000
-        maxChapterChars: 4000
+        maxChapterChars: 5000
         contextBudgetChars: 9000
         scanTopK: 8
         repetitionWindow: 10
@@ -34,15 +34,15 @@
         skipPresetDeploy: true
 
     # ── agent 预设声明（插件清单逐行取自 agent.cordis.yml，机械缩进不漂移） ──
-    - id: 'preset-novel-forge'
+    - id: 'preset-dsh-web-novel'
       name: '@deepseek-ai/dsh-agent-preset'
       config:
-        id: 'novel-forge'
+        id: 'dsh-web-novel'
         name: "造神"
         description: "机械引擎 × fiction-suite 方法论：写前简报、阶段门禁、事实/关系/弧线账本、双轨审计与 git 版本化由插件代码强制；选题、节奏、去 AI 味、阈值与平台口径一律路由到用户技能 fiction-suite。"
         order: 5
         plugins:
-          # novel-forge 预设（融合版）：造神机械引擎 × fiction-suite 方法论。
+          # dsh-web-novel 预设（融合版）：造神机械引擎 × fiction-suite 方法论。
           #
           # 分工：persona 只写「方法论路由 / 机械流程差异 / 双轨质检 / 目录与版本」四件事；
           # briefing→write、一次一章、提案制、熔断、回合预算等硬纪律由插件 systemPrompt

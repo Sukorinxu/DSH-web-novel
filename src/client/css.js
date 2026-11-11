@@ -23,10 +23,10 @@ import { color, space, radius, font, tint, btnSkin, BTN_VARIANTS } from './style
  * 面板根属性。**唯一定义处**（面板组件与样式表都以它为准）。
  * 改这个名字等于换掉整套样式的生效范围，两处会同时跟上。
  */
-export const PANEL_ATTR = 'data-dsh-novel-forge-panel';
+export const PANEL_ATTR = 'data-dsh-web-novel-panel';
 
 /** 注入的 <style> 元素 id（单例键）。 */
-export const STYLE_ID = 'dsh-novel-forge-css';
+export const STYLE_ID = 'dsh-web-novel-css';
 
 const ROOT = `[${PANEL_ATTR}]`;
 
@@ -66,7 +66,7 @@ function buttonRules() {
 /** 组装整张样式表。纯函数，便于单测与预览复用。 */
 export function buildCss() {
 	return [
-		`/* dsh-novel-forge 面板交互态（由 src/client/css.js 生成，勿手改）*/`,
+		`/* dsh-web-novel 面板交互态（由 src/client/css.js 生成，勿手改）*/`,
 
 		// ── 面板级主题变量（浅/深两套；styles.js 只给带浅色回退值的 var() 引用）──
 		// 变量注在**面板根**上——不能注 :root/body：样式表每条规则必须锁在面板根内

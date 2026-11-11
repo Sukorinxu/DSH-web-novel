@@ -31,8 +31,8 @@ import { registerServerApi } from '../lib/server-api.js';
 import { probeSessionCapabilities, resetSessionRateLimit } from '../lib/server-routes/session.js';
 import { createServerFsio } from '../lib/fsio.js';
 
-const PREFIX = '/api/novel-forge';
-const FENCE = 'x-dsh-novel-forge';
+const PREFIX = '/api/dsh-web-novel';
+const FENCE = 'x-dsh-web-novel';
 
 // ── R1 路由清单（护栏本体）──────────────────────────────────────────────
 //
@@ -277,8 +277,8 @@ let rotateProbeResult;
 
 let registryFixturePath;
 before(() => {
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-rest-'));
-    fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-home-'));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-rest-'));
+    fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-home-'));
     backend = makeFakeBackend({ allowWriteRoots: [root], allowReadRoots: [root] });
     const registrations = [];
     ctx = {
@@ -353,7 +353,7 @@ test('W1 纯函数：projcache 解析——Windows cwd 原样取出，坏输入�
 
 test('W2 集成：live sessions 的 header.cwd 进扫描根——面板所在会话的书必可见', async () => {
     const { registerServerApi } = await import('../lib/server-api.js');
-    const liveRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-live-'));
+    const liveRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-live-'));
     fs.mkdirSync(path.join(liveRoot, '直播书'));
     fs.writeFileSync(path.join(liveRoot, '直播书', 'novel.json'), JSON.stringify({ title: '直播书', stage: 'writing', sessions: [], chapters: {} }));
     const registrations = [];
@@ -385,7 +385,7 @@ test('W2 集成：live sessions 的 header.cwd 进扫描根——面板所在会
 test('W3 集成：projcache 的 Windows cwd 在 statSync 可达时进扫描根', async () => {
     // macOS 上造不出 D:\ 真目录——用 tmp 目录冒充「projcache 里的非活跃工作区」验证同一条通路
     const { registerServerApi } = await import('../lib/server-api.js');
-    const ghostRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-ghost-'));
+    const ghostRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-ghost-'));
     fs.mkdirSync(path.join(fakeHome, '.dsh', 'storages'), { recursive: true });
     fs.writeFileSync(path.join(fakeHome, '.dsh', 'storages', 'session_projcache.json'), JSON.stringify({
         tables: { sessions: { ghost: { identity: { cwd: ghostRoot } } } },
@@ -418,7 +418,7 @@ test('W3 集成：projcache 的 Windows cwd 在 statSync 可达时进扫描根',
 
 test('★ 方向4 同名书冲突：多根下同名书只出一卡，且显式标注 duplicates（不再静默先到者胜）', async () => {
     const { registerServerApi } = await import('../lib/server-api.js');
-    const dupRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-dup-'));
+    const dupRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-dup-'));
     const name = '同名双份书';
     // 根①（workspaceRoot=root）与根②（projcache 工作区）各放一份同名书，id 不同
     fs.mkdirSync(path.join(root, name), { recursive: true });
@@ -461,7 +461,7 @@ test('★ 会话归属定位：多根同名书时详情/章节按 ?session= 落�
     // 过滤显示 A 拷贝（105 章），阅读器却按根排序先到先得读到 B 拷贝（103 章）——
     // locateBook 不认会话，两边分家。本用例锁死：给了 ?session= 就读会话名下那份。
     const { registerServerApi } = await import('../lib/server-api.js');
-    const ownRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-own-'));
+    const ownRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-own-'));
     const name = '同名归属书';
     const mkBook = (dir, sessions, logline, chapterText, chapterCount) => {
         fs.mkdirSync(path.join(dir, name, '正文'), { recursive: true });
@@ -535,7 +535,7 @@ test('★ 会话归属定位（列表侧闭环）：多根同名书时 GET /proj
     // 就是这么丢的书），或者显示 A 份章数、点进去读 B 份。列表与 locateBook 共用
     // bookInSession 后，两边才不会分家。
     const { registerServerApi } = await import('../lib/server-api.js');
-    const ownRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-list-own-'));
+    const ownRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-list-own-'));
     const name = '同名列表书';
     const mkBook = (dir, sessions, logline, chapterCount) => {
         fs.mkdirSync(path.join(dir, name, '正文'), { recursive: true });
@@ -603,7 +603,7 @@ test('W3b 集成：目录态 projcache（record.identity.cwd）进扫描根—�
     // 数据在 session_projcache/sessions/*.json 的 record.identity.cwd 里。旧实现只读单文件
     // → 源①静默归零 → 面板空。本用例只造目录态、绝不建单文件，锁死这条通路。
     const { registerServerApi } = await import('../lib/server-api.js');
-    const dirRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-dirpc-'));
+    const dirRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-dirpc-'));
     const sessDir = path.join(fakeHome, '.dsh', 'storages', 'session_projcache', 'sessions');
     fs.mkdirSync(sessDir, { recursive: true });
     fs.writeFileSync(path.join(sessDir, '8d36e786.json'), JSON.stringify({
@@ -642,7 +642,7 @@ test('W4 集成：新会话落盘 projcache 目录态即时进扫描根——内
     // 但 store 由 fiber 持有、面板空闲期会话不在册，见 W4b 与 server-api 头部注释⓪）。
     // 本用例**刻意不给 sessions 服务**——镜像「面板空闲期发起请求」的真实时序；旧实现（纯 TTL、无签名）此用例必红。
     const { registerServerApi } = await import('../lib/server-api.js');
-    const lateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-late-'));
+    const lateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-late-'));
     fs.mkdirSync(path.join(lateRoot, '迟到书'));
     fs.writeFileSync(path.join(lateRoot, '迟到书', 'novel.json'), JSON.stringify({
         title: '迟到书', stage: 'writing', sessions: ['sess-2'], chapters: {},
@@ -687,7 +687,7 @@ test('W4b live 分支（代码路径）：live 不参与任何缓存——服务
     // 替身注入 live 数组，锁的是代码分支「live 每次现算、不进持久层缓存」。
     // （2cbb6fc 的老 W4 拿 live 锁空闲期即时性，前提不成立；空闲期真机收益由上面的签名修兑现。）
     const { registerServerApi } = await import('../lib/server-api.js');
-    const liveRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-liveb-'));
+    const liveRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-liveb-'));
     fs.mkdirSync(path.join(liveRoot, '直播迟到书'));
     fs.writeFileSync(path.join(liveRoot, '直播迟到书', 'novel.json'), JSON.stringify({
         title: '直播迟到书', stage: 'writing', sessions: ['sess-3'], chapters: {},
@@ -729,10 +729,10 @@ test('W4b live 分支（代码路径）：live 不参与任何缓存——服务
 
 test('W-坏根-1 stat 合法但不可列举的根就地剔除，告警按根去重（issue #6）', { skip: process.platform === 'win32' ? 'chmod 000 语义 POSIX 专有' : false }, async () => {
     const { registerServerApi } = await import('../lib/server-api.js');
-    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-goodroot-'));
+    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-goodroot-'));
     fs.mkdirSync(path.join(goodRoot, '好根书'));
     fs.writeFileSync(path.join(goodRoot, '好根书', 'novel.json'), JSON.stringify({ title: '好根书', stage: 'writing', sessions: [], chapters: {} }));
-    const badRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-badroot-'));
+    const badRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-badroot-'));
     fs.mkdirSync(path.join(badRoot, '暗房书'));
     fs.writeFileSync(path.join(badRoot, '暗房书', 'novel.json'), JSON.stringify({ title: '暗房书', stage: 'writing', sessions: [], chapters: {} }));
     const registrations = [];
@@ -776,10 +776,10 @@ test('W-坏根-1 stat 合法但不可列举的根就地剔除，告警按根去�
 
 test('W-坏根-2 listable 校验过了但扫描中途抛错的根降级跳过（TOCTOU/后端差异兜底，issue #6）', async () => {
     const { registerServerApi } = await import('../lib/server-api.js');
-    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-goodroot2-'));
+    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-goodroot2-'));
     fs.mkdirSync(path.join(goodRoot, '好根书B'));
     fs.writeFileSync(path.join(goodRoot, '好根书B', 'novel.json'), JSON.stringify({ title: '好根书B', stage: 'writing', sessions: [], chapters: {} }));
-    const badRoot2 = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-badroot2-'));
+    const badRoot2 = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-badroot2-'));
     fs.mkdirSync(path.join(badRoot2, '坏账书'));
     fs.writeFileSync(path.join(badRoot2, '坏账书', 'novel.json'), JSON.stringify({ title: '坏账书', stage: 'writing', sessions: [], chapters: {} }));
     const base = makeFakeBackend({ allowWriteRoots: [root], allowReadRoots: [root, goodRoot, badRoot2] });
@@ -841,10 +841,10 @@ test('W-坏根-2 listable 校验过了但扫描中途抛错的根降级跳过（
 
 test('W-坏根-3 定位与建书 allowlist 共用同一套坏根剔除（issue #6 写路径收口）', { skip: process.platform === 'win32' ? 'chmod 000 语义 POSIX 专有' : false }, async () => {
     const { registerServerApi } = await import('../lib/server-api.js');
-    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-goodroot3-'));
+    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-goodroot3-'));
     fs.mkdirSync(path.join(goodRoot, '定位书'));
     fs.writeFileSync(path.join(goodRoot, '定位书', 'novel.json'), JSON.stringify({ title: '定位书', stage: 'writing', sessions: ['sess-good3'], chapters: {} }));
-    const badRoot3 = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-badroot3-'));
+    const badRoot3 = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-badroot3-'));
     fs.mkdirSync(path.join(badRoot3, '定位坏书'));
     fs.writeFileSync(path.join(badRoot3, '定位坏书', 'novel.json'), JSON.stringify({ title: '定位坏书', stage: 'writing', sessions: [], chapters: {} }));
     const registrations = [];
@@ -899,10 +899,10 @@ test('W-坏根-4 瞬时类扫描故障只降级不隔离——存储恢复后下
     // 若做成无差别持久隔离（任何错误都永久剔除），「U 盘抖一下/外置存储重挂载」会变成
     // 书静默消失直到进程重启——warn 只刷一次，用户根本看不见，比修复前的响亮 500 更糟。
     const { registerServerApi } = await import('../lib/server-api.js');
-    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-goodroot4-'));
+    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-goodroot4-'));
     fs.mkdirSync(path.join(goodRoot, '好根书D'));
     fs.writeFileSync(path.join(goodRoot, '好根书D', 'novel.json'), JSON.stringify({ title: '好根书D', stage: 'writing', sessions: [], chapters: {} }));
-    const flakyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-flakyroot-'));
+    const flakyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-flakyroot-'));
     fs.mkdirSync(path.join(flakyRoot, '痊愈书'));
     fs.writeFileSync(path.join(flakyRoot, '痊愈书', 'novel.json'), JSON.stringify({ title: '痊愈书', stage: 'writing', sessions: [], chapters: {} }));
     const base = makeFakeBackend({ allowWriteRoots: [root], allowReadRoots: [root, goodRoot, flakyRoot] });
@@ -957,10 +957,10 @@ test('W-坏根-4 瞬时类扫描故障只降级不隔离——存储恢复后下
 
 test('W-坏根-5 诊断行口径与告警行各管各的：stat 合法但不可列举的根不再算「有效」（issue #6 观察面收口）', { skip: process.platform === 'win32' ? 'chmod 000 语义 POSIX 专有' : false }, async () => {
     const { registerServerApi } = await import('../lib/server-api.js');
-    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-goodroot5-'));
+    const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-goodroot5-'));
     fs.mkdirSync(path.join(goodRoot, '好根书E'));
     fs.writeFileSync(path.join(goodRoot, '好根书E', 'novel.json'), JSON.stringify({ title: '好根书E', stage: 'writing', sessions: [], chapters: {} }));
-    const badRoot5 = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-badroot5-'));
+    const badRoot5 = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-badroot5-'));
     fs.mkdirSync(path.join(badRoot5, '暗房书E'));
     fs.writeFileSync(path.join(badRoot5, '暗房书E', 'novel.json'), JSON.stringify({ title: '暗房书E', stage: 'writing', sessions: [], chapters: {} }));
     const registrations = [];
@@ -1017,7 +1017,7 @@ test('H0 载体自检：假 fs 按宿主语义拒绝；列表端点可跑通', a
         '替身必须像宿主一样拒绝版本不符的 replaceIfVersion');
     const updated = await ctx.fs.writeText(target, '覆盖\n', { kind: 'replaceIfVersion', version: created.version });
     assert.equal(updated.operation, 'update');
-    await assert.rejects(() => ctx.fs.writeText({ targetKey: `key:${path.join(os.tmpdir(), 'novel-forge-H0-外面.txt')}` }, 'x'), /FS_OUTSIDE_WORKSPACE/,
+    await assert.rejects(() => ctx.fs.writeText({ targetKey: `key:${path.join(os.tmpdir(), 'dsh-web-novel-H0-外面.txt')}` }, 'x'), /FS_OUTSIDE_WORKSPACE/,
         '受控根之外的写必须炸（宿主沙箱语义）');
 
     const b1 = await createBook('列表书甲');
@@ -1169,7 +1169,7 @@ test('R1+ draft-batch resume：运行中 409 BATCH_RUNNING 防双跑；过期 ru
 // ── R2：workspace 白名单（H4 修复）+ 非法书名 ──────────────────────────
 
 test('R2a workspace 不在受控根集合 → 403 WORKSPACE_FORBIDDEN 且盘上无落点', async () => {
-    const evilRoot = path.join(os.tmpdir(), `novel-forge-evil-${Date.now()}`);
+    const evilRoot = path.join(os.tmpdir(), `dsh-web-novel-evil-${Date.now()}`);
     const res = await drive({ method: 'POST', url: `${PREFIX}/projects`, body: { title: '越界书', workspace: evilRoot } });
     assert.equal(res.statusCode, 403, `非法 workspace 必须 403，实际 ${res.statusCode}：${res.body}`);
     assert.equal(res.json.error?.code, 'WORKSPACE_FORBIDDEN');

@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.16.0 (2026-11-12)
+
+### 更名
+
+- 项目由 `dsh-novel-forge` 更名为 **DSH-web-novel**：GitHub 仓库、本地目录、npm 包名（`dsh-web-novel`）、
+  bundle id、agent preset id、右侧栏 tab id、REST 前缀 `/api/dsh-web-novel`、fence 头
+  `x-dsh-web-novel`、MCP 名称与 `DSH_WEB_NOVEL_*` 环境变量全部同步。
+- 移除旧项目在 DSH profile 里的依赖、bundle 注册、node_modules junction 与 pnpm 锁条目；
+  旧目录不再保留。旧 GitHub 仓库名已通过重命名迁移，旧 URL 由 GitHub 重定向。
+- 品牌显示名「造神」保持不变；内部布局枚举 `forge` / `fiction-suite` 是格式名，不随项目名改动。
+
 ## v1.15.1 (2026-11-11)
 
 ### 增强
@@ -249,7 +260,7 @@
 
 ### 修复
 
-- **一个不可读的扫描根不再拖垮整个项目列表（issue #6）**：Android 上 `dsh web` 以 cwd=/ 启动时，/ 能过 stat 但 readdir 被拒（SELinux），旧代码该失败从扫描一路抛到 `/api/novel-forge/projects` 整体 500——排在坏根前面的好书一张都回不去。现在扫描根准入校验用 readdir（stat 合法 ≠ 可列举），不可列举的根就地剔除并告警（同一根去重不刷屏）；扫描中途抛错的根降级为跳过（TOCTOU 与后端差异兜底）。建书 allowlist 与书籍定位共用同一套根过滤；**权限类**坏根（EACCES/EPERM）被任一路径标记后持续剔除，**瞬时类**存储抖动（EIO/EBUSY）只告警不隔离、下一请求自动重验恢复——存储抖动不能演变成书静默消失到进程重启。`ENOENT`（目录真被删）与抖动同档只告警不隔离，但它的恢复路径是「宿主重建该工作区」而非「等存储回来」——诊断行与告警行各管各的，不再混着说。
+- **一个不可读的扫描根不再拖垮整个项目列表（issue #6）**：Android 上 `dsh web` 以 cwd=/ 启动时，/ 能过 stat 但 readdir 被拒（SELinux），旧代码该失败从扫描一路抛到 `/api/dsh-web-novel/projects` 整体 500——排在坏根前面的好书一张都回不去。现在扫描根准入校验用 readdir（stat 合法 ≠ 可列举），不可列举的根就地剔除并告警（同一根去重不刷屏）；扫描中途抛错的根降级为跳过（TOCTOU 与后端差异兜底）。建书 allowlist 与书籍定位共用同一套根过滤；**权限类**坏根（EACCES/EPERM）被任一路径标记后持续剔除，**瞬时类**存储抖动（EIO/EBUSY）只告警不隔离、下一请求自动重验恢复——存储抖动不能演变成书静默消失到进程重启。`ENOENT`（目录真被删）与抖动同档只告警不隔离，但它的恢复路径是「宿主重建该工作区」而非「等存储回来」——诊断行与告警行各管各的，不再混着说。
 
 ## v1.3.4 (2026-10-28)
 
@@ -460,7 +471,7 @@
 3. **覆盖率警告把「什么要逐字」说死**（`lib/chapter-commit.js`）：旧文案列一串拍行让模型「补写」、下一句又提示拍不参与匹配，自相矛盾——正是「越追越低」的直接推手。新文案：需要逐字（跨标点）出现的是场景条目「：」前的**摘要短语**，拍只是节拍提示写意即可。
 4. **ledger-conflict 文案删「或换新版本」死路**（`lib/ledger.js` `applyFactUpdates`）：冲突按章号记、与版本无关，同章重写换新版本照样冲突——旧补救指了条走不通的路。新文案给出合法修订通道：重写同章时从 `facts_updates` 省略已落账的键；正文表述确实变了，用 `novel_ledger update` 落到实际变化的章号并备注。`reason` 截断上限回归钉随放（250→320；截断语义不变，未截断值 1100+ 字）。
 5. **细纲「必写场景」格式示例进技能页**（`skills/novel/SKILL.md`）：补一份可直接照抄的示例（括号拍与独立拍行两种写法），写明「摘要短语要逐字、拍不要求逐字」——把格式约束从错误信息回教前移到动手前。
-6. **预设 persona 隐私清洗**（`lib/preset/novel-forge/agent.cordis.yml`）：去 AI 味铁律段中书内角色名换中性指代（不变量 12；该文件随 npm 包发行并部署到每个用户的 agent-presets 目录，属发行面）。
+6. **预设 persona 隐私清洗**（`lib/preset/dsh-web-novel/agent.cordis.yml`）：去 AI 味铁律段中书内角色名换中性指代（不变量 12；该文件随 npm 包发行并部署到每个用户的 agent-presets 目录，属发行面）。
 
 ## v1.0.2 (2026-10-21)
 
@@ -581,7 +592,7 @@
 
 ### 文档与回归
 
-30. **改稿通道边界统一为两条**（`lib/index.js`、`lib/tools/propose-tools.js`、`skills/novel/SKILL.md`、`lib/preset/novel-forge/agent.cordis.yml`）：自己动笔改稿（含机审驳回后重写同章）走 `novel_write_chapter`；登记待批提案走 `novel_propose`。删除「修改已存章节只能走提案」的表述。
+30. **改稿通道边界统一为两条**（`lib/index.js`、`lib/tools/propose-tools.js`、`skills/novel/SKILL.md`、`lib/preset/dsh-web-novel/agent.cordis.yml`）：自己动笔改稿（含机审驳回后重写同章）走 `novel_write_chapter`；登记待批提案走 `novel_propose`。删除「修改已存章节只能走提案」的表述。
 31. **回归测试**：新增 `test/m15-coverage-scope-and-continuity.test.mjs`、`test/m15b-session-handoff.test.mjs`、`test/diagnose-quotes.test.mjs`、`test/volume-open-range.test.mjs`、`test/platform-review-fixes.test.mjs`、`test/platform-persist.test.mjs`、`test/char-limits-scope.test.mjs`（口径闭环 + 本书区间：写章/简报/提案/润色/审计五面同一数）、`test/proposal-guardrails.test.mjs`（陈旧提案两分支 + 同章去重 + discard id 守卫 + 称谓证据）、`test/helpers/plugin.mjs`（装插件共用载体，含造字工具）；`test/client.test.mjs` 增「书作用域请求统一带 session」与交接 `body.book` 两条**驱动真控制器**的行为用例（原 `test/m15b-session-handoff.test.mjs` 里读源码字符串的那条断言已按 AGENTS.md 换成行为测试）；`test/server-api.test.mjs` 增「会话归属定位」集成用例并把路由清单加到 28 条（R1 fence 全覆盖）；`test/batch5.test.mjs`、`test/logic.test.mjs`、`test/smoke.test.mjs` 随行为调整断言。
 
 ## v1.0.1 (2026-10-16)
@@ -964,7 +975,7 @@ scene/save」三连把熔断清零续命（其中一章 18 分钟 6 轮 12 驳�
 ### 面板样式审查修复
 
 - **`--nf-elev-*` 阴影变量改注面板根**：原写在 `:where(:root, body)` 上，被「每条规则
-  必须以面板根限定」护栏测试拦下；改注 `[data-dsh-novel-forge-panel]` 后，深色补丁
+  必须以面板根限定」护栏测试拦下；改注 `[data-dsh-web-novel-panel]` 后，深色补丁
   （`:where(body[data-ds-dark-theme])` 权重 0）与浅色同特异性、靠后声明压过浅色，
   面板内所有 `var()` 引用照常继承，styles.js 回退值继续兜底。
 - **prefers-reduced-motion 补 `[data-nf-tap]:hover`**：悬停抬升 `translateY(-1px)`
@@ -1109,7 +1120,7 @@ esbuild 产物，随源码改动重建。`scripts/` 与 `test/` 不在 npm `file
 
 ### headless 不再整块挂起：宿主真名服务改走数组 inject 独立 fiber（真机事故回归）
 
-- 事故：`dsh --profile headless` 上 `dsh-novel-forge: pending (waiting for services:
+- 事故：`dsh --profile headless` 上 `dsh-web-novel: pending (waiting for services:
   sessionController, workspaceController)` + `warning: 1 entry did not activate`——主插件顶层
   `inject` 硬声明了这两个宿主真名，headless 没有它们，cordis 数组 inject 又没有可选语义，
   于是 **20 个 novel_* 工具 + 面板在 headless 上整块消失**。讽刺的是
@@ -1257,7 +1268,7 @@ esbuild 产物，随源码改动重建。`scripts/` 与 `test/` 不在 npm `file
 
 ### npm 首发 + 两个拆分回归修复（387 用例全绿）
 
-- **npm 首发占名**：`dsh-novel-forge` 首次发布到 npm（此前仅 GitHub 安装，dshmarket
+- **npm 首发占名**：`dsh-web-novel` 首次发布到 npm（此前仅 GitHub 安装，dshmarket
   "Most installed" 榜按 npm 周下载排名，缺席即永久榜外）。
 - **润色/校对 REST 双写修复**（`server-routes/chapters.js`，04e377a 拆分回归）：
   polish/proofread 分支曾 `return runChapterRevision(...)`——该函数经 writeJson/fail
@@ -1516,8 +1527,8 @@ Windows 真机三连修，测试 278 → 285。
   锚定失败自动把并发降回 1（单章路径给出完整人话诊断）。
 - **GitHub Actions CI**：push/PR 自动跑 `npm test`（构建 + 双静态审计 +
   全量单测）；README tests 徽章从静态文字换成动态 workflow 徽章。
-- **README npm 死链摘除**：`npm:dsh-novel-forge` 从未发布（registry 404），
-  安装指南里的 npm 路改为注释并标注 scoped 包名 `@huangziyuan-general/dsh-novel-forge`，
+- **README npm 死链摘除**：`npm:dsh-web-novel` 从未发布（registry 404），
+  安装指南里的 npm 路改为注释并标注 scoped 包名 `@Sukorinxu/DSH-web-novel`，
   发包后启用。
 - 测试 244 项（新增 4 条：anchor 独立可用、预解析 parent 不碰注册表、
   批量锚定只一次、无 anchor 面兼容旧替身）。

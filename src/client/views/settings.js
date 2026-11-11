@@ -51,7 +51,7 @@ export function SettingsView({ state: s = {} } = {}) {
 			Btn({ variant: 'ghost', size: 'sm', action: 'back-from-settings' }, '← 返回'),
 			h('span', { style: { fontWeight: weight.semibold, fontSize: font.lead } }, '⚙ 设置'),
 			h('span', { style: { flex: '1 1 auto' } }),
-			Chip({}, 'v' + (window.__NOVEL_FORGE_VERSION__ || '?')),
+			Chip({}, 'v' + (window.__DSH_WEB_NOVEL_VERSION__ || '?')),
 		),
 
 		// ── 本书设置（可改） ─────────────────────────────────────────────

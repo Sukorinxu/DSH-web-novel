@@ -20,7 +20,7 @@ export function createChaptersController(ctx) {
 			// 读不到正文不能静默——给一句人话，别让用户以为这一章是空的
 			state.baseline = ''; state.draft = ''; state.draftVersion++;
 			state.error = `读取第 ${no} 章失败（刷新或检查服务）`;
-			console.warn('[novel-forge] 读取章节失败', state.error);
+			console.warn('[dsh-web-novel] 读取章节失败', state.error);
 		}
 		notify();
 	};

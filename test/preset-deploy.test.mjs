@@ -12,7 +12,7 @@ import { deployPreset, PRESET_ID } from '../lib/preset-deploy.js';
 
 /** 每个用例独占一个 DSH_HOME，避免互相污染。 */
 function withHome(fn) {
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-preset-'));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-preset-'));
     const prev = process.env.DSH_HOME;
     process.env.DSH_HOME = home;
     try {
@@ -80,12 +80,12 @@ test('预设部署：用户手改过的文件先备份再更新，不静默吞�
 
 test('预设部署：SKIP_DEPLOY=1 时完全不碰盘', () => {
     withHome((home) => {
-        process.env.DSH_NOVEL_FORGE_SKIP_DEPLOY = '1';
+        process.env.DSH_WEB_NOVEL_SKIP_DEPLOY = '1';
         try {
             const r = deployPreset({});
             assert.equal(r.skipped, true);
             assert.ok(!fs.existsSync(targetOf(home)), '跳过时不该创建目录');
-        } finally { delete process.env.DSH_NOVEL_FORGE_SKIP_DEPLOY; }
+        } finally { delete process.env.DSH_WEB_NOVEL_SKIP_DEPLOY; }
     });
 });
 

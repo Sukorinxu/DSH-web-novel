@@ -22,8 +22,8 @@ const check = (name, ok, detail = '') => {
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  — ${detail}` : ''}`);
 };
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-real-'));
-const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-home-'));
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-real-'));
+const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-home-'));
 const backend = createNodeFsBackend(root);
 const registrations = [];
 const ctx = {
@@ -40,11 +40,11 @@ registerServerApi(ctx, { workspaceRoot: root, scanTopK: 8, minChapterChars: 10, 
 });
 const server = http.createServer((req, res) => registrations[0].handler(req, res));
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
-const base = `http://127.0.0.1:${server.address().port}/api/novel-forge`;
+const base = `http://127.0.0.1:${server.address().port}/api/dsh-web-novel`;
 const j = async (url, body, method = 'POST') => {
     const res = await fetch(`${base}${url}`, {
         method,
-        headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${server.address().port}`, 'x-dsh-novel-forge': '1' },
+        headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${server.address().port}`, 'x-dsh-web-novel': '1' },
         body: body === undefined ? undefined : JSON.stringify(body),
     });
     let json = null; try { json = await res.json(); } catch { /* 404 空体 */ }

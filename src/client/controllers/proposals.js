@@ -56,7 +56,7 @@ export function createProposalsController(ctx) {
 			if (!Number.isFinite(targetChapter) || targetChapter <= 0) {
 				// 服务端没回章号 = 拿不到目标章，别猜（Number(undefined)=NaN 会切到幽灵章）
 				state.notice += '；未拿到被改的章号，编辑器未切换';
-				console.warn('[novel-forge] 应用提案返回的 chapter 非法：', value.chapter);
+				console.warn('[dsh-web-novel] 应用提案返回的 chapter 非法：', value.chapter);
 			} else if (state.chapterNo === targetChapter) {
 				await ctx.loadChapter(targetChapter);
 			} else if (state.draftModified) {

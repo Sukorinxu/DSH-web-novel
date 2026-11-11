@@ -39,7 +39,7 @@ export function createProjectsController(ctx) {
 		syncSession();
 		state.loading = true; state.error = ''; notify();
 		// 探针日志：用户卡「加载中」时，console 里有没有这行 + 后面有没有收尾，直接分诊
-		console.info('[novel-forge] GET /projects' + (state.sessionId ? `?session=${state.sessionId}` : '（无会话）'));
+		console.info('[dsh-web-novel] GET /projects' + (state.sessionId ? `?session=${state.sessionId}` : '（无会话）'));
 		try {
 			// scope='all' 时不带 session 参数——多会话工作流里别的会话建的书也要能看（头部 chip 可切换）
 			const scopedUrl = state.sessionId && state.sessionScope !== 'all' ? withSession('/projects') : '/projects';
@@ -56,7 +56,7 @@ export function createProjectsController(ctx) {
 			}
 		} catch (error) {
 			state.error = String(error?.message ?? error);
-			console.warn('[novel-forge] 项目列表加载失败：', state.error);
+			console.warn('[dsh-web-novel] 项目列表加载失败：', state.error);
 		} finally {
 			state.loading = false; notify();
 		}
@@ -543,7 +543,7 @@ export function createProjectsController(ctx) {
 				notify();
 				const newId = value.createdSessionId;
 				const archiveOld = () => apiFetch('/session/archive', { method: 'POST', body: JSON.stringify({ session: oldSessionId }) })
-					.catch((error) => console.warn('[novel-forge] 旧会话延迟归档失败（可在会话列表手动归档）：', error?.message ?? error));
+					.catch((error) => console.warn('[dsh-web-novel] 旧会话延迟归档失败（可在会话列表手动归档）：', error?.message ?? error));
 				// 归档时机不猜时间猜状态（CodeBuddy 审查 2026-10-10）：openSession 同步返回、
 				// 异步完成导航——固定 60ms 在慢渲染下会「归档先到、main 还是旧会话」，
 				// clearMain 照样踢人。轮询 syncSession（读宿主 sessions.list 的 current）

@@ -1,8 +1,8 @@
-# dsh-novel-forge · Novel Forge
+# DSH-web-novel · Novel Forge
 
 > English ｜ [中文文档](./README.md)
 
-![release](https://img.shields.io/github/v/release/huangziyuan-general/dsh-novel-forge) ![license](https://img.shields.io/github/license/huangziyuan-general/dsh-novel-forge) [![tests](https://img.shields.io/github/actions/workflow/status/huangziyuan-general/dsh-novel-forge/ci.yml?branch=main&label=tests)](https://github.com/huangziyuan-general/dsh-novel-forge/actions/workflows/ci.yml)
+![release](https://img.shields.io/github/v/release/Sukorinxu/DSH-web-novel) ![license](https://img.shields.io/github/license/Sukorinxu/DSH-web-novel) [![tests](https://img.shields.io/github/actions/workflow/status/Sukorinxu/DSH-web-novel/ci.yml?branch=main&label=tests)](https://github.com/Sukorinxu/DSH-web-novel/actions/workflows/ci.yml)
 
 A novel-writing plugin for DeepSeek Harness (DSH). It has exactly one design spine:
 
@@ -91,17 +91,15 @@ The failure modes of AI long-form writing aren't magic — each has an engineeri
 **Step 1 · Install the plugin** (pick one):
 
 ```bash
-# from npm (published since 0.16.0; installs count toward dshmarket's "Most installed" board)
-dsh plugin --profile web add npm:dsh-novel-forge
 
 # from a public GitHub repo (⚠️ the github: shorthand goes through pnpm → SSH:
 # the machine needs a GitHub SSH key plus github.com in ~/.ssh/known_hosts, otherwise
 # updates fail with "Host key verification failed"; without SSH, use the npm source
 # above — pulling a public package needs no credentials at all)
-dsh plugin --profile web add github:huangziyuan-general/dsh-novel-forge
+dsh plugin --profile web add github:Sukorinxu/DSH-web-novel
 
 # local dev (symlink, edits take effect immediately)
-dsh plugin --profile web add link:/path/to/dsh-novel-forge
+dsh plugin --profile web add link:/path/to/dsh-web-novel
 ```
 
 **Step 2 · Restart DSH web, then hard-refresh the browser** (the client bundle is snapshotted at process start; without a restart it's as if you never installed it).
@@ -235,16 +233,16 @@ Uninstalling the plugin does not affect any book data.
 ## Dual MCP channel (reuse outside the host)
 
 The same set of `novel_*` tools (gates / ledger / audit / baselines all live at the tool layer) can also be exposed via stdio MCP to
-any MCP client such as Claude Desktop / Cursor — the workspace root takes `NOVEL_FORGE_ROOT`
+any MCP client such as Claude Desktop / Cursor — the workspace root takes `DSH_WEB_NOVEL_ROOT`
 (defaults to the process cwd), and one novel = one directory in the workspace:
 
 ```json
 {
   "mcpServers": {
-    "novel-forge": {
+    "dsh-web-novel": {
       "command": "node",
-      "args": ["/path/to/dsh-novel-forge/mcp/server.mjs"],
-      "env": { "NOVEL_FORGE_ROOT": "/your/novel/workspace" }
+      "args": ["/path/to/dsh-web-novel/mcp/server.mjs"],
+      "env": { "DSH_WEB_NOVEL_ROOT": "/your/novel/workspace" }
     }
   }
 }
@@ -257,8 +255,8 @@ containment and version-guard semantics (including the `readBytes` byte primitiv
 
 | Symptom | Fix |
 | --- | --- |
-| No "🔨 Forge" tab in the right sidebar | Restart DSH web (bundle is snapshotted at process start) → **hard-refresh** the browser. The console should show `[novel-forge] client apply v…` |
-| Panel button does nothing when clicked | Hard-refresh first; check the console for `[novel-forge]` logs. Developers can run the button sweep in `npm run preview` to locate it |
+| No "📚 Forge" tab in the right sidebar | Restart DSH web (bundle is snapshotted at process start) → **hard-refresh** the browser. The console should show `[dsh-web-novel] client apply v…` |
+| Panel button does nothing when clicked | Hard-refresh first; check the console for `[dsh-web-novel]` logs. Developers can run the button sweep in `npm run preview` to locate it |
 | Polish / proofread returns `503 engine not ready` | The current dsh process has no usable model service: confirm the model route is configured, the plugin is the latest build, and it has been restarted to take effect |
 | Polish / proofread returns `NO_PARENT_AGENT` | The plugin first tries to auto-materialize by the "book's owning session" candidate; if that still fails, send a message in the session that owns the book (so the session agent stays resident), then retry from the panel |
 | Polish returns `OUTPUT_TRUNCATED` | Model output was cut off by the cap. Keep `engine.channels.*.maxTokens` at the default 0 (inherits the host-calibrated value); don't set it small explicitly |
@@ -289,7 +287,7 @@ the three-step panel-entry contract, etc.) are in [AGENTS.md](./AGENTS.md).
 
 ## Known boundaries
 
-- **Panel REST is localhost-only** (security model, since 2026-10-09): the API relies on two browser-unforgeable defenses — the `x-dsh-novel-forge` fence header blocks ordinary cross-origin, and the `Host`/`Origin` allowlist (`localhost`/`127.0.0.1`/`[::1]`) blocks DNS rebinding. The cost is **localhost restriction**: changing the port is fine (port isn't in the check), an SSH tunnel is fine (Host stays 127.0.0.1), but if you expose DSH web to a LAN and access it from another machine, the Forge panel API will 403 (`FORBIDDEN_HOST`). The fence gives zero protection against other local processes — that's a design assumption (the threat model is a malicious web page in the browser, not a local process). For custom domains, the plugin config `allowedHosts` can explicitly append hostnames (issue #7): **the default empty array keeps behavior byte-identical**; only an explicit config loosens it, and wildcards are rejected outright (a wildcard would dismantle the DNS-rebinding defense).
+- **Panel REST is localhost-only** (security model, since 2026-10-09): the API relies on two browser-unforgeable defenses — the `x-dsh-web-novel` fence header blocks ordinary cross-origin, and the `Host`/`Origin` allowlist (`localhost`/`127.0.0.1`/`[::1]`) blocks DNS rebinding. The cost is **localhost restriction**: changing the port is fine (port isn't in the check), an SSH tunnel is fine (Host stays 127.0.0.1), but if you expose DSH web to a LAN and access it from another machine, the Forge panel API will 403 (`FORBIDDEN_HOST`). The fence gives zero protection against other local processes — that's a design assumption (the threat model is a malicious web page in the browser, not a local process). For custom domains, the plugin config `allowedHosts` can explicitly append hostnames (issue #7): **the default empty array keeps behavior byte-identical**; only an explicit config loosens it, and wildcards are rejected outright (a wildcard would dismantle the DNS-rebinding defense).
 - The anti-AI-smell wordlist and thresholds are **heuristic** — they catch only visible symptoms and don't promise a "cure"; the structural metrics (rhythm variance / information dilution) are what make it stronger than a pure wordlist.
 - `novel_audit` only produces deterministic evidence; "model review" happens in the session; the side-channel engine only serves internal chores (polish / proofread / annotate / draft) and doesn't change the line that "audit tools don't call the model".
 - Batch-draft concurrency cap is **4** (default 1; forced down to 1 when the book has no scene contract); concurrency only applies to drafting, commit is always serial.

@@ -14,10 +14,10 @@
 // （引擎有意设计：没有 session 可操作时宁可报错，也不静默写进没人画的面）。
 // 而右侧栏若处于折叠态，seat 可能迟迟不挂载 —— 所以窗口给到 30 秒。
 /** 本实现在 tab 系统里的身份：`definition.id`，也是内容 seat 的 key。 */
-export const TAB_ID = 'dsh-novel-forge';
+export const TAB_ID = 'dsh-web-novel';
 
 /** tab 类型判别符：`openTab` 用它点名（语义与 id 不同，别混）。 */
-export const TAB_KIND = 'novel-forge';
+export const TAB_KIND = 'dsh-web-novel';
 
 /**
  * ① 类型定义（纯静态：认领什么地址、叫什么、guide 里给不给入口胶囊）。
@@ -46,7 +46,7 @@ export function tabDefinition() {
  */
 export function registerForgeTab(ctx, Panel) {
 	ctx.effect(() => ctx.sidebarRightTabs.register(tabDefinition()),
-		'dsh-novel-forge: 右侧栏 tab 类型');
+		'dsh-web-novel: 右侧栏 tab 类型');
 	// `slots.inject(name, cb)`：等这个 seat 可用再注册（官方 documentpreview 同款写法）
 	ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
 		name: 'sidebar.right.pane.tab',
@@ -54,7 +54,7 @@ export function registerForgeTab(ctx, Panel) {
 		// inject 工厂是面板 props 的唯一来源：**sessionId 只有这里能拿到**，
 		// 面板靠它把项目列表按会话过滤（「项目跟会话走」）。
 		inject: (sessionId) => ({ sessionId }),
-	}, Panel)), 'dsh-novel-forge: 右侧栏 tab 内容');
+	}, Panel)), 'dsh-web-novel: 右侧栏 tab 内容');
 }
 
 /**
@@ -79,14 +79,14 @@ export function openForgeTab(ctx, opts = {}) {
 		try {
 			ctx.sidebarRight.openTab(TAB_KIND);
 			opened = true;
-			log.info('[novel-forge] 已打开右侧栏 tab（造神）');
+			log.info('[dsh-web-novel] 已打开右侧栏 tab（造神）');
 			return true;
 		} catch (error) {
 			tries += 1;
 			if (tries < maxTries) {
 				timer(attempt, 250);
 			} else {
-				log.warn('[novel-forge] 自动打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入', error);
+				log.warn('[dsh-web-novel] 自动打开右侧栏 tab 失败，可从右侧栏 guide 页手动进入', error);
 			}
 			return false;
 		}

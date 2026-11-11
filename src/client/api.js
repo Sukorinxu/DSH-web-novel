@@ -5,10 +5,10 @@
 // 每个请求都带 fence header —— 服务端拿它当跨站调用门禁（缺失即 403）。
 
 /** REST 基础路径，与 lib/server-api.js 的挂载点必须一致。 */
-export const API_BASE = '/api/novel-forge';
+export const API_BASE = '/api/dsh-web-novel';
 
 /** 服务端门禁头：值不重要，存在即可。 */
-export const FENCE = 'x-dsh-novel-forge';
+export const FENCE = 'x-dsh-web-novel';
 
 /** 单请求超时（毫秒）：卡死的请求 12 秒后必须变成可见错误，不许永远「加载中」。 */
 export const FETCH_TIMEOUT_MS = 12_000;

@@ -32,7 +32,7 @@ before(async () => {
     if (!hasSdk) return;
     ({ apply } = await import('../lib/index.js'));
 
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'novel-forge-smoke-'));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-web-novel-smoke-'));
     const backend = {
         async resolve(p, opts) {
             const abs = path.isAbsolute(p) ? p : path.join(opts?.cwd ?? root, p);
@@ -844,7 +844,7 @@ test('client 结构契约：package.json 声明 ./client + dsh.client，产物�
     // 缺这个标记 = 有人直接改了产物，构建链已被绕过（源码与产物脱钩）。
     assert.match(src, /^\/\/ ⚠️ 自动生成/, 'client.js 必须带 generated 头（证明来自 npm run build，而非手写）');
     assert.match(src, /window\.__ModuleLoader__\.load\(/, 'client.js 必须调用 __ModuleLoader__.load');
-    assert.match(src, /id:\s*"dsh-novel-forge"/, 'client.js 的 load id 必须等于插件名');
+    assert.match(src, /id:\s*"dsh-web-novel"/, 'client.js 的 load id 必须等于插件名');
     // 导出改由 esbuild 的 CJS 装配交回（module.exports = __toCommonJS(index_exports)），
     // 不再有手写的 `exports.apply = apply` —— 断言导出**表内容**，不绑死语句形态。
     assert.match(src, /module\.exports\s*=\s*__toCommonJS\(index_exports\)/, 'client.js 必须以 CJS 语义交回导出表');
@@ -856,7 +856,7 @@ test('client 结构契约：package.json 声明 ./client + dsh.client，产物�
 test('节奏铁律（融合 F2）：preset 与工具描述都写死「一次只写一章」', () => {
     // 治「一句话就写到章节结束」：persona 层 + 工具描述层 + 系统提示层，三处都有。
     const base = path.join(import.meta.dirname, '..');
-    const preset = fs.readFileSync(path.join(base, 'lib', 'preset', 'novel-forge', 'agent.cordis.yml'), 'utf8');
+    const preset = fs.readFileSync(path.join(base, 'lib', 'preset', 'dsh-web-novel', 'agent.cordis.yml'), 'utf8');
     assert.ok(preset.includes('节奏铁律'), 'preset persona 必须有节奏铁律');
     assert.ok(preset.includes('一次只写一章'), 'preset 必须写明「一次只写一章」');
     assert.ok(preset.includes('绝不擅自连写第二章'), 'preset 必须写明不许连写下一章');
