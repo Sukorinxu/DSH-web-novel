@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.16.1 (2026-11-12)
+
+### 内容识别优化
+
+- 工作台本地扫描新增 **fiction-suite 模板对照**：读取本机 `fiction-suite` 技能的
+  `assets/world-building-template.md`、`outline-template.md`、`volume-plan-template.md`、
+  `character-card-template.md`、`chapter-template.md`，按 Markdown 标题结构比对项目里的
+  `.md/.txt`，不再只靠文件名猜。
+- 命中结果写入项目画像 `similar` 并在工作台卡片「相似内容」中展示：五槽位、对应模板、
+  匹配度、命中章节、缺失章节；同时把显式字段（题材、世界名、计划章数、单章字数）预填到
+  接入表单。
+- 扫描优先读取「设定/圣经/大纲/细纲/人物/角色」类文件，避免长篇正文挤占内容探测窗口；
+  skill 未安装或读取失败时使用内置同义结构兜底，扫描不失败。
+- skill 模板读取走 `ctx.fs`（工作区之外的基础设施，只读），不碰书稿，也不把文件内容发给模型。
+
 ## v1.16.0 (2026-11-12)
 
 ### 更名

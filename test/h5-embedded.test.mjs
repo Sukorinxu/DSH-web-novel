@@ -17,4 +17,7 @@ test('H5 工作台默认页与关键入口存在', () => {
     assert.match(html, /data-wb-del/);
     assert.match(html, /作品简介（500 字以内）/);
     assert.match(html, /如 2000-5000/);
+    assert.match(html, /相似内容/);
+    assert.match(html, /fiction-suite 模板对照/);
+    assert.match(html, /模板字段/);
 });

@@ -33,7 +33,11 @@ card (copy continue-writing prompt / mark as read). Mobile collapses to a single
 project's `AGENTS.md` / `MEMORY.md` / `README.md`, recognizes novel/web-fiction projects, and
 maps existing `.md/.txt` files into the five Zaoshen slots — body / chapter outline / book
 outline / setting-bible / characters. Each project card shows counts, sample files, unclassified
-files and a confidence score. Source directories stay read-only; confirming an import reuses
+files and a confidence score. The scanner also reads the installed `fiction-suite` skill's
+`assets/*.md` templates (setting bible / outline / volume / character / chapter), compares each
+project file's heading structure against them, and fills a "Similar content" block with the
+matched template, score, matched and missing sections, plus explicit fields such as genre and
+planned chapter count. Source directories stay read-only; confirming an import reuses
 `novel_import action=adopt` to copy body and chapter outlines by original chapter number.
 Workbench discovery costs zero tokens and never sends file contents to the model.
 
