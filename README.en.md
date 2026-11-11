@@ -63,7 +63,7 @@ The failure modes of AI long-form writing aren't magic — each has an engineeri
 | Model "can't see prior text" | Pre-write briefing assembles a context pack within budget (outline → character cards → ledger → foreshadowing → worldbook → previous chapter ending) | `novel_briefing` |
 | Skipping stages verbally | Stage gate: if the chapter outline isn't approved, `novel_write_chapter` rejects outright | `novel_outline approve` |
 | Cross-chapter repetition / padding | 8-character shingle overlap detection against prior text; beyond threshold, save is rejected | `novel_write_chapter` mechanical check |
-| Uncontrolled chapter length | Mechanical-check threshold defaults to 2000–4000 chars (serial-web novel standard, target 3000); the pre-write briefing carries a "target chapter length" section | `novel_write_chapter` / `novel_briefing` |
+| Uncontrolled chapter length | Mechanical-check threshold defaults to 2000–5000 chars (serial-web novel standard, target 3500); the pre-write briefing carries a "target chapter length" section | `novel_write_chapter` / `novel_briefing` |
 | No hook at chapter end | Chapter-end hook heuristic (question / suspense / ellipsis / exclamation); missing one raises a warning | `novel_audit` |
 | AI smell | Eight-dimension structural scan: template sentences / stock-phrase density / emotional directness / sentence-pattern templates / paragraph-rhythm variance / information dilution / chapter-end formula / AI default words (fully local, zero model cost) | `novel_noai_scan` |
 | Silent overwriting of text | Proposal system: edits go through a proposal → user confirms → new version is generated; old versions are never overwritten | `novel_propose` |
@@ -141,7 +141,7 @@ novel_project init → novel_project phase (see the nine-stage board, fill entry
 
 | Feature | Entry | Description |
 | --- | --- | --- |
-| Workbench / auto-discovery | top nav "Workbench" (default) | scans the workspace on entry, reads `AGENTS.md` / `MEMORY.md` / `README.md`, recognizes novel projects, maps existing md/txt to the five Zaoshen slots; one-click adopt keeps sources read-only |
+| Workbench / auto-discovery | top nav "Workbench" (default) | scans the workspace on entry, reads `AGENTS.md` / `MEMORY.md` / `README.md`, recognizes novel projects; book title prefers 《…》, falls back to 《暂未命名》; detects covers and ≤500-char synopsis; maps existing md/txt to the five Zaoshen slots; one-click adopt keeps sources read-only; book cards support rename/delete |
 | Shelf / New book | shelf top | "New book" fills book name / title / genre / premise / chapter length / platform / workspace → `novel_project init` |
 | Import / Adopt | shelf top | scan legacy workspaces → one-click adopt (source stays read-only), file import (single file / local folder), paste-text import |
 | Book detail | top nav | cover / title / stage / updated / tags / stats / continue reading · catalog · settings; left column intro / latest chapters / catalog preview, right column book data / quick actions / other books |
@@ -219,7 +219,7 @@ Uninstalling the plugin does not affect any book data.
 | Item | Default | Description |
 | --- | --- | --- |
 | minChapterChars | 2000 | per-chapter lower bound (mechanical-reject line, serial-web standard) |
-| maxChapterChars | 4000 | per-chapter upper bound (over prompts to split) |
+| maxChapterChars | 5000 | per-chapter upper bound (over prompts to split) |
 | contextBudgetChars | 6000 | pre-write briefing context-pack budget |
 | scanTopK | 8 | max problems listed per dimension in scan report |
 | repetitionWindow | 10 | sliding window for cross-chapter repetition detection (compare against previous N chapters) |

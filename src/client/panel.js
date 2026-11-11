@@ -264,7 +264,7 @@ export function ForgePanel(props) {
 					padding: '5px 8px', borderBottom: `1px solid ${color.border1}`, background: color.surface2,
 				},
 			},
-				h('span', { style: { fontWeight: weight.semibold, fontSize: font.small, flex: 'none' } }, '🔨 造神 · H5'),
+				h('span', { style: { fontWeight: weight.semibold, fontSize: font.small, flex: 'none' } }, '📚 造神 · H5'),
 				h('span', {
 					style: {
 						flex: '1 1 auto', minWidth: 0, fontSize: font.caption, color: color.text3,
@@ -299,7 +299,7 @@ export function ForgePanel(props) {
 	},
 		// 品牌条：图标块 + 标题（含版本）+ 副题 + 会话范围
 		h('div', { style: headerStyle },
-			h('div', { style: brandMarkStyle }, '🔨'),
+			h('div', { style: brandMarkStyle }, '📚'),
 			h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
 				h('div', { style: { display: 'flex', alignItems: 'center', gap: space.sm } },
 					h('span', { style: titleStyle }, '造神'),

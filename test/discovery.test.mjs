@@ -74,11 +74,33 @@ test('项目画像：五槽位计数、章节范围、未分类文件都保留',
 test('目录名清洗：书名号/括号尾巴/空名', () => {
     assert.equal(preferredBookName('《长夜》（连载版）'), '长夜');
     assert.equal(displayTitle('《长夜》（连载版）'), '长夜');
-    assert.equal(preferredBookName(''), '未命名项目');
+    assert.equal(preferredBookName(''), '暂未命名');
+    assert.equal(preferredBookName('_DeepSeek_workspace'), '暂未命名');
+    assert.equal(displayTitle(''), '《暂未命名》');
+    assert.equal(preferredBookName('普通项目', [{ name: 'AGENTS.md', text: '书名：星河彼岸\n作品简介：一个关于远航的故事。' }]), '星河彼岸');
 });
 
 test('启动文件摘要：优先取「一句话/立意/简介」行', () => {
     const text = '# 项目\n\n一句话立意：一个失忆的修表匠找回家族真相。\n\n其他正文';
     assert.equal(projectSummary(text), '一句话立意：一个失忆的修表匠找回家族真相。');
     assert.equal(projectSummary(''), '');
+});
+
+import { parseBootstrapMeta, pickCover, isDiscoveryImageFile } from '../lib/discovery.js';
+
+test('启动文件元信息：书名号优先、作品简介截断 500 字', () => {
+    const meta = parseBootstrapMeta([{ name: 'AGENTS.md', text: '项目类型：网文\n书名：星河彼岸\n作品简介：' + '远航'.repeat(300) }]);
+    assert.equal(meta.bookTitle, '星河彼岸');
+    assert.equal(meta.synopsis.length, 500);
+    const mark = parseBootstrapMeta([{ name: 'MEMORY.md', text: '本项目改编自《长夜行》。' }]);
+    assert.equal(mark.bookTitle, '长夜行');
+});
+
+test('封面识别：书名/项目名同名优先，其次 600X800/封面', () => {
+    assert.equal(isDiscoveryImageFile('封面.PNG'), true);
+    assert.equal(isDiscoveryImageFile('正文.md'), false);
+    assert.equal(pickCover(['assets/星河彼岸.jpg', '600X800.png'], { bookTitle: '星河彼岸', projectName: '项目' }), 'assets/星河彼岸.jpg');
+    assert.equal(pickCover(['600x800.JPG'], { bookTitle: '别的名字', projectName: '项目' }), '600x800.JPG');
+    assert.equal(pickCover(['封面.png'], { bookTitle: '别的' }), '封面.png');
+    assert.equal(pickCover([], { bookTitle: 'x' }), null);
 });

@@ -28,7 +28,7 @@ export function tabDefinition() {
 		id: TAB_ID,
 		kind: TAB_KIND,
 		priority: 'extension',
-		title: () => '🔨 造神',
+		title: () => '📚 造神',
 		// guide 是「右侧栏常驻页」里的入口胶囊 —— 跨会话都在，
 		// 自动打开失败 / 被用户关掉时，这是手动通道（保底入口）。
 		guide: [{

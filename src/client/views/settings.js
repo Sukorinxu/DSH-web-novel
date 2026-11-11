@@ -2,7 +2,7 @@
 //
 // 为什么重写：旧页只是**只读**「能力清单」，用户问「能不能在面板里改设置」时答案是「不能」。
 // 现在两件事都能在这里做：
-//   ① 本书设置（每章字数区间 / 投放平台 / 一句话立意）→ POST /projects/:id/settings
+//   ① 本书设置（每章字数区间 / 投放平台 / 作品简介）→ POST /projects/:id/settings
 //      （与工具面 novel_project chars/platform、以及 H5 设置页同一个端点，一份真相）；
 //   ② H5 网页版（阅读/工作台）入口 —— 面板卡顿时换独立渲染的 H5 页面。
 // 注意：布局（forge/fiction-suite）与版本策略是**进程级插件配置**，改了要重启宿主，
@@ -15,7 +15,7 @@ import { Card, Btn, Chip, KV, Section, Feedback } from '../ui.js';
 
 /** 平台选项：与 lib/store.js 的 PLATFORM_IDS 对齐（空串=未设置）。 */
 const PLATFORMS = [
-	{ id: '', name: '未设置（回落插件默认 2000–4000）' },
+	{ id: '', name: '未设置（回落插件默认 2000–5000）' },
 	{ id: 'qidian', name: '起点（2000–4000）' },
 	{ id: 'fanqie', name: '番茄（1500–3000，建议落点 2800–2990）' },
 	{ id: 'jjwxc', name: '晋江（3000–6000）' },
@@ -81,14 +81,14 @@ export function SettingsView({ state: s = {} } = {}) {
 								style: { ...inputStyle, width: '100%', boxSizing: 'border-box', padding: '5px 6px' },
 							}, PLATFORMS.map((p) => h('option', { key: p.id, value: p.id }, p.name))),
 						),
-						// 一句话立意：写前简报与黄金三章诊断都会用
+						// 作品简介：写前简报与黄金三章诊断都会用
 						h('div', { style: stackStyle(space.xs) },
-							fieldLabel('一句话立意', '进简报与诊断，≤120 字'),
+							fieldLabel('作品简介', '进简报与诊断，≤500 字'),
 							h('textarea', {
 								'data-field': 'settings-logline',
 								defaultValue: s.detail?.logline ?? '',
 								rows: 3,
-								maxLength: 120,
+								maxLength: 500,
 								placeholder: '例：穿越群演靠平行宇宙顶流群拿能力，一路写歌、拿权柄、拍出第一部长片。',
 								style: { ...inputStyle, width: '100%', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.7 },
 							}),
@@ -145,7 +145,7 @@ export function SettingsView({ state: s = {} } = {}) {
 					cap(true, '批量起草 —— 并发生成、串行提交，每章照样过全部门禁'),
 					cap(true, '全书体检 —— 死人复活 / 账本矛盾 / 伏笔超期 / 章号断档（零 token）'),
 					cap(true, '批准或丢弃模型提的修订；管理世界书；章节朗读连播'),
-					cap(true, '克隆为模板；改本书字数区间 / 平台 / 一句话立意'),
+					cap(true, '克隆为模板；改本书字数区间 / 平台 / 作品简介'),
 					cap(true, 'H5 网页版阅读与工作台（独立渲染）'),
 				),
 				h('div', { style: { marginTop: space.lg } },

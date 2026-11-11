@@ -96,7 +96,7 @@ export function ProjectListView({ state: s }) {
 			? h('div', { style: hintStyle }, '加载中…')
 			: s.projects.length === 0
 				? Empty({
-					icon: '🔨',
+					icon: '📚',
 					title: '本会话还没有项目',
 					hint: '输入书名创建一个；或在会话里让 AI 调 novel_project init —— 书建好后会自动出现在这里。',
 				})
