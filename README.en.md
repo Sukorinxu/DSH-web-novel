@@ -29,11 +29,19 @@ searchable; the reader has an 800px column, an `Aa` panel (font size / line heig
 width / background), progress bar, arrow-key and click-zone chapter turns, and a chapter-end
 card (copy continue-writing prompt / mark as read). Mobile collapses to a single column.
 
+**The first screen is the Workbench**: it scans the controlled workspace roots, reads each
+project's `AGENTS.md` / `MEMORY.md` / `README.md`, recognizes novel/web-fiction projects, and
+maps existing `.md/.txt` files into the five Zaoshen slots — body / chapter outline / book
+outline / setting-bible / characters. Each project card shows counts, sample files, unclassified
+files and a confidence score. Source directories stay read-only; confirming an import reuses
+`novel_import action=adopt` to copy body and chapter outlines by original chapter number.
+Workbench discovery costs zero tokens and never sends file contents to the model.
+
 The H5 app is a full control console: top navigation covers Book / Catalog / Characters /
 Worldbook / Foreshadows / Health / Tools / Settings (book-scoped pages hide when no book is
 selected); the shelf offers "New book" and "Import / Adopt" (new book, legacy-workspace scan
 and one-click adopt, **local folder import**, paste-text import, workspace-file import).
-The Tools page exposes all 23 `novel_*` tools through `GET /tools` + `POST /rpc` with forms
+The Tools page exposes all 24 `novel_*` tools through `GET /tools` + `POST /rpc` with forms
 generated from each tool's JSON schema — the same gates, ledgers and versioning as the chat
 channel. Book settings (chapter length / platform / logline) share the same storage.
 (These screenshots use **fictional sample data**: the demo book "Long Night (Sample)".)
@@ -41,7 +49,7 @@ channel. Book settings (chapter length / platform / logline) share the same stor
 | | |
 | --- | --- |
 | **Book detail** (cover / stats / continue reading)<br><img src="assets/screenshots-h5/01-detail.png" width="100%"> | **Catalog** (50-chapter groups + search)<br><img src="assets/screenshots-h5/02-catalog.png" width="100%"> |
-| **Reader** (Aa settings / progress / chapter-end card)<br><img src="assets/screenshots-h5/03-reader.png" width="100%"> | **Tools** (23 `novel_*` tools with schema-driven forms)<br><img src="assets/screenshots-h5/04-tools.png" width="100%"> |
+| **Reader** (Aa settings / progress / chapter-end card)<br><img src="assets/screenshots-h5/03-reader.png" width="100%"> | **Tools** (24 `novel_*` tools with schema-driven forms)<br><img src="assets/screenshots-h5/04-tools.png" width="100%"> |
 | **Settings** (book length/platform/logline + reading prefs)<br><img src="assets/screenshots-h5/05-settings.png" width="100%"> | |
 
 > The screenshots above are **real renders** of the H5 app (headless Chromium; reproducible via
@@ -98,7 +106,7 @@ dsh plugin --profile web add link:/path/to/dsh-novel-forge
 
 **Step 2 · Restart DSH web, then hard-refresh the browser** (the client bundle is snapshotted at process start; without a restart it's as if you never installed it).
 
-**Step 3 · Verify the install**: a standalone "造神" tab appears in the right sidebar; in a session, ask the model to "list the novel tools" — you should see 23 `novel_*` tools. The agent preset is declared by this bundle's `cordis.patch.yml`.
+**Step 3 · Verify the install**: a standalone "造神" tab appears in the right sidebar; in a session, ask the model to "list the novel tools" — you should see 24 `novel_*` tools. The agent preset is declared by this bundle's `cordis.patch.yml`.
 
 **Step 4 · Create your first book**: just tell the model in a session, e.g.:
 
@@ -106,14 +114,14 @@ dsh plugin --profile web add link:/path/to/dsh-novel-forge
 
 **Step 5 · Follow the nine stages**: the model guides you through premise → setting → characters → outline → volumes → chapter outlines → body, in order; at each stage it directly lists what's missing. You must `novel_outline approve` the chapter outline before writing it — that's by design, not a bug.
 
-**Step 6 · Collect results in the H5 app**: in the right-sidebar "造神" H5 you can read, browse the catalog, check characters / worldbook / foreshadowing / health, run all 23 tools (polish / proofread / audit / export, …) from the Tools page, and edit this book's settings.
+**Step 6 · Collect results in the H5 app**: in the right-sidebar "造神" H5 you can read, browse the catalog, check characters / worldbook / foreshadowing / health, run all 24 tools (polish / proofread / audit / export, …) from the Tools page, and edit this book's settings.
 
 Host version requirements and the dependency surface are in [COMPATIBILITY.md](./COMPATIBILITY.md).
 
 ## Division of labor: session vs. H5
 
 - **In a session (model + `novel_*` tools)**: all creative actions — create book, outline, detailed outline, write chapter, ledger, audit. Writing a chapter must go through the session (briefing + multi-stage commit gates form a multi-turn loop).
-- **H5 (right-sidebar "造神")**: shelf and create/import, book detail and catalog, reader, characters / worldbook / foreshadowing / health views, the Tools page (form entry for all 23 `novel_*` tools), and book settings — sharing the same gates, ledgers and versioning as the chat channel.
+- **H5 (right-sidebar "造神")**: shelf and create/import, book detail and catalog, reader, characters / worldbook / foreshadowing / health views, the Tools page (form entry for all 24 `novel_*` tools), and book settings — sharing the same gates, ledgers and versioning as the chat channel.
 
 Typical session flow:
 
@@ -133,6 +141,7 @@ novel_project init → novel_project phase (see the nine-stage board, fill entry
 
 | Feature | Entry | Description |
 | --- | --- | --- |
+| Workbench / auto-discovery | top nav "Workbench" (default) | scans the workspace on entry, reads `AGENTS.md` / `MEMORY.md` / `README.md`, recognizes novel projects, maps existing md/txt to the five Zaoshen slots; one-click adopt keeps sources read-only |
 | Shelf / New book | shelf top | "New book" fills book name / title / genre / premise / chapter length / platform / workspace → `novel_project init` |
 | Import / Adopt | shelf top | scan legacy workspaces → one-click adopt (source stays read-only), file import (single file / local folder), paste-text import |
 | Book detail | top nav | cover / title / stage / updated / tags / stats / continue reading · catalog · settings; left column intro / latest chapters / catalog preview, right column book data / quick actions / other books |
@@ -142,10 +151,11 @@ novel_project init → novel_project phase (see the nine-stage board, fill entry
 | Worldbook | top nav | entries, keywords, priority, always-on/disabled state (lazy loaded) |
 | Foreshadowing | top nav | open/paid, setup chapter, planned payoff chapter, missing-plan flag |
 | Health | top nav | `/continuity` hard-error / warning counts + per-issue list, rerunnable (zero token) |
-| Tools | top nav | all 23 `novel_*` tools with schema-generated forms (enum / bool / long text / JSON); write tools refresh the book after running |
+| Tools | top nav | all 24 `novel_*` tools with schema-generated forms (enum / bool / long text / JSON); write tools refresh the book after running |
+| Session harvest | top nav | reads the selected live session (newest by default), spends one model call (tokens) to extract characters / worldbook / glossary / outline; can create a new book or add-only enrich an existing one; dry-run preview available |
 | Settings | top nav / detail | book chapter-length / platform / logline; reader preferences stored locally |
 
-## 23 tools
+## 24 tools
 
 | Tool | Responsibility | Hard constraint |
 | --- | --- | --- |

@@ -76,6 +76,10 @@ const ROUTES = [
     { name: 'GET /tools（工具清单 + 输入 schema）', method: 'GET', url: `${PREFIX}/tools` },
     { name: 'GET /workspaces（扫描根）', method: 'GET', url: `${PREFIX}/workspaces` },
     { name: 'POST /rpc（执行 novel_* 工具）', method: 'POST', url: `${PREFIX}/rpc` },
+    // 1.14：会话采风（H5 读 live 会话 → 建书/扩写）
+    { name: 'GET /discover（工作区发现）', method: 'GET', url: `${PREFIX}/discover` },
+    { name: 'GET /sessions（live 会话清单）', method: 'GET', url: `${PREFIX}/sessions` },
+    { name: 'POST /sessions/harvest（读会话建书/扩写）', method: 'POST', url: `${PREFIX}/sessions/harvest` },
     { name: 'POST /projects/:id/clone', method: 'POST', url: `${PREFIX}/projects/护栏本/clone` },
     { name: 'GET /worldbook/:bookId', method: 'GET', url: `${PREFIX}/worldbook/护栏本` },
     { name: 'POST /worldbook/:bookId', method: 'POST', url: `${PREFIX}/worldbook/护栏本` },
