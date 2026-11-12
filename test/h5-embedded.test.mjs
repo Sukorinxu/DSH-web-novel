@@ -21,5 +21,6 @@ test('H5 工作台默认页与关键入口存在', () => {
     assert.match(html, /fiction-suite 模板对照/);
     assert.match(html, /模板字段/);
     assert.match(html, /再点一次确认删除/);
+    assert.match(html, /id: b\.name \|\| b\.id/);
     assert.doesNotMatch(html, /window\.confirm\(/);
 });
